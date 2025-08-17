@@ -1,0 +1,14 @@
+app:
+  name: "cool-password-manager"
+  version: "1.0.0"
+  issuer: "cool-password-manager"
+
+http:
+  port: "8080"
+  host: "0.0.0.0"
+
+logger:
+  log_level: "debug"
+
+db:
+  pool_max: 2
