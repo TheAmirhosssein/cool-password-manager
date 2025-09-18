@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/TheAmirhosssein/cool-password-manage/config"
-	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructrue/server"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/server"
 )
 
 func main() {

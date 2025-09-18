@@ -24,9 +24,11 @@ type (
 	}
 
 	APP struct {
-		Name      string `env-required:"true" yaml:"name"`
-		Version   string `env-required:"true" yaml:"version"`
-		SecretKey string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
+		Name                   string `env-required:"true" yaml:"name"`
+		Version                string `env-required:"true" yaml:"version"`
+		SecretKey              string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
+		RootPath               string
+		AuthenticatorTemplates string `env-required:"true" yaml:"auth_templates" env:"AUTH_TEMPLATE"`
 	}
 
 	HTTP struct {
@@ -56,6 +58,11 @@ func newConfig() (*Config, error) {
 	err = cleanenv.ReadEnv(conf)
 	if err != nil {
 		return nil, fmt.Errorf("env error: %w", err)
+	}
+
+	conf.APP.RootPath, err = getRootPath()
+	if err != nil {
+		return nil, fmt.Errorf("getting root path error: %w", err)
 	}
 
 	return conf, nil
@@ -93,7 +100,7 @@ func InTestMode() bool {
 	return false
 }
 
-func GetRootPath() (string, error) {
+func getRootPath() (string, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		return "", err

@@ -2,6 +2,7 @@ app:
   name: "cool-password-manager"
   version: "1.0.0"
   issuer: "cool-password-manager"
+  auth_templates: "/internal/app/account/delivery/http/router/templates/*"
 
 http:
   port: "8080"

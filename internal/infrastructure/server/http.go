@@ -2,10 +2,10 @@ package server
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/router"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -23,9 +23,7 @@ func Run(conf *config.Config) {
 	config.AllowAllOrigins = true
 
 	server.Use(cors.New(config))
-	server.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"something": "something"})
-	})
+	router.AuthHandler(server, conf)
 
 	server.Run(fmt.Sprintf("%v:%v", conf.HTTP.Host, conf.HTTP.Port))
 }
