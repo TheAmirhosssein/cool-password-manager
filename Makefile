@@ -1,3 +1,7 @@
+include .env
+export $(shell sed 's/=.*//' .env)
+POSTGRES_CONNECTION_STRING = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
+
 up: up
 up-build: up-build
 down: down
