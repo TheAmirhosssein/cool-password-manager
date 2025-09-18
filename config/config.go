@@ -29,6 +29,7 @@ type (
 		SecretKey              string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
 		RootPath               string
 		AuthenticatorTemplates string `env-required:"true" yaml:"auth_templates" env:"AUTH_TEMPLATE"`
+		ErrorTemplates         string `env-required:"true" yaml:"error_templates" env:"ERROR_TEMPLATE"`
 	}
 
 	HTTP struct {

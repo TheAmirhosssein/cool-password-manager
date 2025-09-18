@@ -6,6 +6,7 @@ import (
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/router"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/httperror"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +25,7 @@ func Run(conf *config.Config) {
 
 	server.Use(cors.New(config))
 	router.AuthHandler(server, conf)
+	httperror.ErrorServer(server, conf)
 
 	server.Run(fmt.Sprintf("%v:%v", conf.HTTP.Host, conf.HTTP.Port))
 }

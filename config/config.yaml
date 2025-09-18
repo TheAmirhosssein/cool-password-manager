@@ -3,10 +3,11 @@ app:
   version: "1.0.0"
   issuer: "cool-password-manager"
   auth_templates: "/internal/app/account/delivery/http/router/templates/*"
+  error_templates: "/internal/app/httperror/templates/*"
 
 http:
   port: "8080"
-  host: "0.0.0.0"
+  host: "localhost"
 
 logger:
   log_level: "debug"
