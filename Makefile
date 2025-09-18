@@ -2,6 +2,7 @@ include .env
 export $(shell sed 's/=.*//' .env)
 POSTGRES_CONNECTION_STRING = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 
+run: run
 up: up
 up-build: up-build
 down: down
@@ -10,8 +11,11 @@ migrate: migrate
 migrate-down: migrate-down
 migration: migration
 
+run:
+	@ air -c .air.toml
+
 up:
-	@ docker compose up 
+	@ docker compose up  -d
 
 up-build:
 	@ docker compose up --build

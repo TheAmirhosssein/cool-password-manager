@@ -9,5 +9,5 @@ import (
 func AuthHandler(server *gin.Engine, conf *config.Config) {
 	templatePath := conf.APP.RootPath + conf.APP.AuthenticatorTemplates
 	server.LoadHTMLGlob(templatePath)
-	server.GET("/", handler.Authenticator)
+	server.GET("/auth", handler.Authenticator)
 }

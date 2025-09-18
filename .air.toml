@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 
 [build]
 bin = "./tmp/main"
-cmd = "go build -buildvcs=false -o ./tmp/main ./cmd/."
+cmd = "go build -o ./tmp/main ./cmd/."
 delay = 1000
 exclude_regex = [".*_templ.go"]
 exclude_dir = ["assets", "tmp", "vendor", "node_modules"]
