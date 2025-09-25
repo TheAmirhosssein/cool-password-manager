@@ -5,9 +5,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/database"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
@@ -39,9 +41,85 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+func TestAccountRepository_ReadByUsername(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewAccountRepository(pgTestSuite.db)
+
+	testcases := []struct {
+		name     string
+		username string
+		expect   entity.Account
+		wantErr  bool
+	}{
+		{
+			name:     "existing user",
+			username: seed.UserJohnDoe.Username,
+			expect:   seed.UserJohnDoe,
+			wantErr:  false,
+		},
+		{
+			name:     "non-existing user",
+			username: "not_found",
+			expect:   entity.Account{},
+			wantErr:  true,
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			account, err := repo.ReadByUsername(ctx, tc.username)
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expect.Username, account.Username)
+				require.Equal(t, tc.expect.Email, account.Email)
+				require.Equal(t, tc.expect.Secret, account.Secret)
+			}
+		})
+	}
+}
+
+func TestAccountRepository_Update(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewAccountRepository(pgTestSuite.db)
+
+	account := seed.UserJohnDoe
+	account.Secret = types.NullString{String: "something", Valid: true}
+
+	testcases := []struct {
+		name    string
+		account entity.Account
+	}{
+		{
+			name:    "valid update",
+			account: account,
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := repo.Update(ctx, tc.account)
+			require.NoError(t, err)
+			account, err = repo.ReadByUsername(ctx, tc.account.Username)
+			require.NoError(t, err)
+			require.Equal(t, account.Secret, tc.account.Secret)
+		})
+	}
+}
+
 func TestAccountRepository_ExistByPassword(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	repo := repository.NewAccountRepository(pgTestSuite.db)
 
 	testcases := []struct {
 		name     string
@@ -72,10 +150,6 @@ func TestAccountRepository_ExistByPassword(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			// Setup
-			repo := repository.NewAccountRepository(pgTestSuite.db)
-
-			// Read
 			exist, err := repo.ExistByPassword(ctx, tc.username, tc.password)
 			require.NoError(t, err)
 			require.Equal(t, exist, tc.exist)
