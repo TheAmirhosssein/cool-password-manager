@@ -1,6 +1,9 @@
 package entity
 
-import "github.com/TheAmirhosssein/cool-password-manage/internal/utils/base"
+import (
+	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/utils/base"
+)
 
 type Account struct {
 	Entity    base.Entity
@@ -9,4 +12,5 @@ type Account struct {
 	FirstName string
 	LastName  string
 	Password  string
+	Secret    types.NullString
 }
