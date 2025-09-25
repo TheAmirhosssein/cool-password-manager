@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
+	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
 	"github.com/TheAmirhosssein/goose/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
@@ -47,7 +48,7 @@ func GetDb(ctx context.Context) *pgxpool.Pool {
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
-func Migrate(db *pgxpool.Pool) error {
+func migrate(db *pgxpool.Pool) error {
 	goose.SetBaseFS(embedMigrations)
 
 	if err := goose.SetDialect("postgres"); err != nil {
@@ -59,4 +60,29 @@ func Migrate(db *pgxpool.Pool) error {
 	}
 
 	return nil
+}
+
+func SetupTestDB(ctx context.Context) (string, *pgxpool.Pool) {
+	// Start transaction
+	name, err := testdocker.GenerateName()
+	if err != nil {
+		panic("error getting name")
+	}
+
+	port, err := testdocker.StartPostgresContainer(ctx, name, name)
+	if err != nil {
+		panic("error starting database")
+	}
+
+	db, err := testdocker.GetTestDB(ctx, port)
+	if err != nil {
+		panic("error getting db")
+	}
+
+	err = migrate(db)
+	if err != nil {
+		panic("error getting db")
+	}
+
+	return name, db
 }
