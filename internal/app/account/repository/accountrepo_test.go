@@ -116,7 +116,7 @@ func TestAccountRepository_Update(t *testing.T) {
 	}
 }
 
-func TestAccountRepository_ExistByPassword(t *testing.T) {
+func TestAccountRepository_ExistByUsername(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	repo := repository.NewAccountRepository(pgTestSuite.db)
@@ -124,25 +124,16 @@ func TestAccountRepository_ExistByPassword(t *testing.T) {
 	testcases := []struct {
 		name     string
 		username string
-		password string
 		exist    bool
 	}{
 		{
 			name:     "exist",
 			username: seed.UserJohnDoe.Username,
-			password: seed.UserJohnDoe.Password,
 			exist:    true,
-		},
-		{
-			name:     "wrong password",
-			username: seed.UserJohnDoe.Username,
-			password: "wrong password",
-			exist:    false,
 		},
 		{
 			name:     "wrong username",
 			username: "wrong username",
-			password: seed.UserJohnDoe.Password,
 			exist:    false,
 		},
 	}
@@ -150,7 +141,7 @@ func TestAccountRepository_ExistByPassword(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			exist, err := repo.ExistByPassword(ctx, tc.username, tc.password)
+			exist, err := repo.ExistByUsername(ctx, tc.username)
 			require.NoError(t, err)
 			require.Equal(t, exist, tc.exist)
 		})
