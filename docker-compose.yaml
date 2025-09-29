@@ -8,5 +8,10 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis
+    ports:
+      - "6377:6379"
+
 volumes:
   data:
