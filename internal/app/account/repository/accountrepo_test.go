@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"log"
 	"os"
 	"testing"
 
@@ -11,7 +12,9 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
+	"github.com/alicebob/miniredis/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,6 +24,7 @@ type postgresTest struct {
 }
 
 var pgTestSuite postgresTest
+var redisClient *redis.Client
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -34,6 +38,16 @@ func TestMain(m *testing.M) {
 	pgTestSuite = <-pgTask
 
 	seed.CreateSeed(ctx, pgTestSuite.db)
+
+	mr, err := miniredis.Run()
+	if err != nil {
+		log.Fatalf("An error occurred while starting miniredis: %v", err)
+	}
+	redisClient = redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+
+	seed.CreateTowFactorSeed(ctx, redisClient)
 
 	exitCode := m.Run()
 	testdocker.StopAndRemoveContainer(ctx, pgTestSuite.name, pgTestSuite.name)
@@ -54,8 +68,8 @@ func TestAccountRepository_ReadByUsername(t *testing.T) {
 	}{
 		{
 			name:     "existing user",
-			username: seed.UserJohnDoe.Username,
-			expect:   seed.UserJohnDoe,
+			username: seed.AccountJohnDoe.Username,
+			expect:   seed.AccountJohnDoe,
 			wantErr:  false,
 		},
 		{
@@ -89,7 +103,7 @@ func TestAccountRepository_Update(t *testing.T) {
 	ctx := context.Background()
 	repo := repository.NewAccountRepository(pgTestSuite.db)
 
-	account := seed.UserJohnDoe
+	account := seed.AccountJohnDoe
 	account.Secret = types.NullString{String: "something", Valid: true}
 
 	testcases := []struct {
@@ -128,7 +142,7 @@ func TestAccountRepository_ExistByUsername(t *testing.T) {
 	}{
 		{
 			name:     "exist",
-			username: seed.UserJohnDoe.Username,
+			username: seed.AccountJohnDoe.Username,
 			exist:    true,
 		},
 		{

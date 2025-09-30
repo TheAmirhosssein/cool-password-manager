@@ -23,7 +23,7 @@ func NewAccountRepository(db *pgxpool.Pool) AccountRepository {
 	return accountRepo{db: db}
 }
 
-func (r repo) ReadByUsername(ctx context.Context, username string) (entity.Account, error) {
+func (r accountRepo) ReadByUsername(ctx context.Context, username string) (entity.Account, error) {
 	query := "SELECT username, email, secret, password FROM accounts WHERE username = $1"
 
 	var account entity.Account
@@ -37,7 +37,7 @@ func (r repo) ReadByUsername(ctx context.Context, username string) (entity.Accou
 	return account, nil
 }
 
-func (r repo) Update(ctx context.Context, account entity.Account) error {
+func (r accountRepo) Update(ctx context.Context, account entity.Account) error {
 	query := "UPDATE accounts SET secret = $1 WHERE id = $2"
 
 	_, err := r.db.Exec(ctx, query, account.Secret, account.Entity.ID)
@@ -49,7 +49,7 @@ func (r repo) Update(ctx context.Context, account entity.Account) error {
 	return nil
 }
 
-func (r repo) ExistByUsername(ctx context.Context, username string) (bool, error) {
+func (r accountRepo) ExistByUsername(ctx context.Context, username string) (bool, error) {
 	query := "SELECT EXISTS(SELECT 1 WHERE username = $1) FROM accounts"
 
 	var exist bool
