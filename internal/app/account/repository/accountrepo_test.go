@@ -161,3 +161,35 @@ func TestAccountRepository_ExistByUsername(t *testing.T) {
 		})
 	}
 }
+
+func TestAccountRepository_ExistByEmail(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewAccountRepository(pgTestSuite.db)
+
+	testcases := []struct {
+		name  string
+		email string
+		exist bool
+	}{
+		{
+			name:  "exist",
+			email: seed.AccountJohnDoe.Email,
+			exist: true,
+		},
+		{
+			name:  "wrong email",
+			email: "wrong email",
+			exist: false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			exist, err := repo.ExistByEmail(ctx, tc.email)
+			require.NoError(t, err)
+			require.Equal(t, exist, tc.exist)
+		})
+	}
+}

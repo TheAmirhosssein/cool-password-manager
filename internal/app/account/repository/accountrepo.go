@@ -13,6 +13,7 @@ type AccountRepository interface {
 	ReadByUsername(ctx context.Context, username string) (entity.Account, error)
 	Update(ctx context.Context, account entity.Account) error
 	ExistByUsername(ctx context.Context, username string) (bool, error)
+	ExistByEmail(ctx context.Context, email string) (bool, error)
 }
 
 type accountRepo struct {
@@ -60,6 +61,23 @@ func (r accountRepo) ExistByUsername(ctx context.Context, username string) (bool
 			return false, nil
 		}
 		log.ErrorLogger.Error("error at checking account existent by username", "error", err.Error(), "username", username)
+		return false, err
+	}
+
+	return exist, nil
+}
+
+func (r accountRepo) ExistByEmail(ctx context.Context, email string) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 WHERE email = $1) FROM accounts"
+
+	var exist bool
+	err := r.db.QueryRow(ctx, query, email).Scan(&exist)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil
+		}
+		log.ErrorLogger.Error("error at checking account existent by email", "error", err.Error(), "email", email)
 		return false, err
 	}
 
