@@ -18,9 +18,10 @@ var (
 
 type (
 	Config struct {
-		APP  `yaml:"app"`
-		HTTP `yaml:"http"`
-		DB   `yaml:"db"`
+		APP   `yaml:"app"`
+		HTTP  `yaml:"http"`
+		DB    `yaml:"db"`
+		Redis `yaml:"redis"`
 	}
 
 	APP struct {
@@ -39,6 +40,10 @@ type (
 
 	DB struct {
 		URL string `env-required:"true" env:"POSTGRES_URL"`
+	}
+
+	Redis struct {
+		URL string `env-required:"true" env:"REDIS_URL"`
 	}
 )
 
