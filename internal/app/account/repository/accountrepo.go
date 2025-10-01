@@ -10,6 +10,7 @@ import (
 )
 
 type AccountRepository interface {
+	Create(ctx context.Context, account entity.Account) error
 	ReadByUsername(ctx context.Context, username string) (entity.Account, error)
 	Update(ctx context.Context, account entity.Account) error
 	ExistByUsername(ctx context.Context, username string) (bool, error)
@@ -22,6 +23,21 @@ type accountRepo struct {
 
 func NewAccountRepository(db *pgxpool.Pool) AccountRepository {
 	return accountRepo{db: db}
+}
+
+func (r accountRepo) Create(ctx context.Context, account entity.Account) error {
+	query := "INSERT INTO accounts (username, password, email, first_name, last_name, secret) VALUES ($1, $2, $3, $4, $5, $6)"
+
+	_, err := r.db.Exec(
+		ctx, query, account.Username, account.Password, account.Email, account.FirstName, account.LastName, account.Secret,
+	)
+
+	if err != nil {
+		log.ErrorLogger.Error("error at creating account", "error", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (r accountRepo) ReadByUsername(ctx context.Context, username string) (entity.Account, error) {
