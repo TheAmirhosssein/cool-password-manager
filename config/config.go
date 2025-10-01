@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
@@ -89,12 +90,24 @@ func GetTestConfig() *Config {
 	return &Config{}
 }
 
-func (c *Config) GetSecretKey() string {
+func (c *Config) GetAESSecretKey() string {
 	if InTestMode() {
-		return "secretestkey"
+		key, err := generateKey()
+		if err != nil {
+			panic(err)
+		}
+		return string(key)
 	}
 
 	return c.APP.SecretKey
+}
+
+func generateKey() ([]byte, error) {
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		return nil, err
+	}
+	return key, nil
 }
 
 func InTestMode() bool {
