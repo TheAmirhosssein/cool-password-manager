@@ -6,11 +6,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/database"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/totp"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
 	"github.com/alicebob/miniredis/v2"
@@ -56,6 +58,74 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+func TestAuthUsecase_SignUp(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	johnDoe := seed.AccountJohnDoe
+
+	testcases := []struct {
+		name         string
+		account      entity.Account
+		expectedErr  error
+		expectSecret bool
+	}{
+		{
+			name: "success signup",
+			account: entity.Account{
+				Username:  "new_user",
+				Password:  "password123",
+				Email:     "new_user@example.com",
+				FirstName: "New",
+				LastName:  "User",
+			},
+			expectedErr:  nil,
+			expectSecret: true,
+		},
+		{
+			name: "username already exists",
+			account: entity.Account{
+				Username:  johnDoe.Username, // already seeded
+				Password:  "somepass",
+				Email:     "unique_email@example.com",
+				FirstName: "Dup",
+				LastName:  "User",
+			},
+			expectedErr:  account.AuthUsernameExist,
+			expectSecret: false,
+		},
+		{
+			name: "email already exists",
+			account: entity.Account{
+				Username:  "unique_username",
+				Password:  "somepass",
+				Email:     johnDoe.Email, // already seeded
+				FirstName: "Dup",
+				LastName:  "User",
+			},
+			expectedErr:  account.AuthEmailExist,
+			expectSecret: false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			u := setupAuthUsecase()
+			auth, err := u.SignUp(ctx, tc.account)
+
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+				require.Equal(t, totp.Authenticator{}, auth)
+			} else {
+				require.NoError(t, err)
+				require.NotEmpty(t, auth.Secret)
+			}
+		})
+	}
+}
+
 func TestAuthUsecase_CreateTwoFactor(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -80,14 +150,14 @@ func TestAuthUsecase_CreateTwoFactor(t *testing.T) {
 			name:        "user does not exist",
 			username:    "ghost",
 			password:    "irrelevant",
-			expectedErr: account.AuthInvalidUser,
+			expectedErr: account.AuthInvalidAccount,
 			expectTF:    false,
 		},
 		{
 			name:        "invalid password",
 			username:    johnDoe.Username,
 			password:    "wrong password",
-			expectedErr: account.AuthInvalidUser,
+			expectedErr: account.AuthInvalidAccount,
 			expectTF:    false,
 		},
 	}
@@ -116,5 +186,8 @@ func TestAuthUsecase_CreateTwoFactor(t *testing.T) {
 func setupAuthUsecase() usecase.AuthUsecase {
 	aRepo := repository.NewAccountRepository(pgTestSuite.db)
 	tfRepo := repository.NewTwoFactorRepository(redisClient)
-	return usecase.NewAuthUsecase(aRepo, tfRepo)
+	authenticator := totp.NewAuthenticatorAdaptor("something")
+	config := config.GetTestConfig()
+
+	return usecase.NewAuthUsecase(aRepo, tfRepo, authenticator, config)
 }
