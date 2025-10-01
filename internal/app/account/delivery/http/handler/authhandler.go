@@ -1,30 +1,56 @@
 package handler
 
 import (
+	"encoding/base64"
 	"net/http"
 
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/handler/model"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/httperror"
+	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/gin-gonic/gin"
-	"github.com/pquerna/otp/totp"
-	"github.com/skip2/go-qrcode"
 )
 
-func Authenticator(ctx *gin.Context) {
-	key, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "CoolPasswordManager",
-		AccountName: "user@example.com",
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate key"})
-		return
-	}
+func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
+	template := "sign_up.html"
+	switch ctx.Request.Method {
 
-	// Generate QR code PNG
-	png, err := qrcode.Encode(key.URL(), qrcode.Medium, 256)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "failed to create QR"})
-		return
-	}
+	case http.MethodGet:
+		ctx.HTML(http.StatusOK, template, nil)
 
-	// Return base64 image for HTML <img>
-	ctx.Data(http.StatusOK, "image/png", png)
+	case http.MethodPost:
+		var form model.SignUpModel
+		if err := ctx.ShouldBind(&form); err != nil {
+			ctx.HTML(http.StatusOK, template, nil)
+			return
+		}
+
+		acc := entity.Account{
+			Username:  form.Username,
+			Email:     form.Email,
+			FirstName: form.FirstName,
+			LastName:  form.LastName,
+			Password:  form.Password,
+		}
+
+		authenticator, err := usecase.SignUp(ctx, acc)
+		if err != nil {
+			httperror.HandleError(ctx, errors.Error2Custom(err), template)
+			return
+		}
+
+		twoFactor, err := usecase.CreateTwoFactor(ctx, acc.Username, acc.Password)
+		if err != nil {
+			httperror.HandleError(ctx, errors.Error2Custom(err), template)
+			return
+		}
+
+		base64Img := base64.StdEncoding.EncodeToString(authenticator.QrCode)
+
+		ctx.HTML(http.StatusOK, "qrcode.html", gin.H{
+			"QRCode":      base64Img,
+			"twoFactorID": twoFactor.ID,
+		})
+	}
 }

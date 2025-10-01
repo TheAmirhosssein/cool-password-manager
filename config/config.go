@@ -26,12 +26,11 @@ type (
 	}
 
 	APP struct {
-		Name                   string `env-required:"true" yaml:"name"`
-		Version                string `env-required:"true" yaml:"version"`
-		SecretKey              string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
-		RootPath               string
-		AuthenticatorTemplates string `env-required:"true" yaml:"auth_templates" env:"AUTH_TEMPLATE"`
-		ErrorTemplates         string `env-required:"true" yaml:"error_templates" env:"ERROR_TEMPLATE"`
+		Name         string `env-required:"true" yaml:"name"`
+		Version      string `env-required:"true" yaml:"version"`
+		AESKey       string `env-required:"true" yaml:"aes_key" env:"AES_KEY"`
+		RootPath     string
+		TemplatePath string `env-required:"true" yaml:"template_path" env:"TEMPLATE_PATH"`
 	}
 
 	HTTP struct {
@@ -95,7 +94,7 @@ func (c *Config) GetAESSecretKey() ([]byte, error) {
 		return base64.StdEncoding.DecodeString("syaZbz9ca3SZ51GUdyx3F//e89Hgfr2XuHHn4VdnMQU=")
 	}
 
-	keyBytes, err := base64.StdEncoding.DecodeString(c.APP.SecretKey)
+	keyBytes, err := base64.StdEncoding.DecodeString(c.APP.AESKey)
 	return keyBytes, err
 }
 

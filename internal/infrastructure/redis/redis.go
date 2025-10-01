@@ -5,7 +5,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func Client() *redis.Client {
+var client *redis.Client
+
+func initClient() *redis.Client {
 	conf := config.GetConfig()
 	opt, err := redis.ParseURL(conf.Redis.URL)
 	if err != nil {
@@ -16,5 +18,8 @@ func Client() *redis.Client {
 }
 
 func GetClient() *redis.Client {
-	return Client()
+	if client == nil {
+		client = initClient()
+	}
+	return client
 }

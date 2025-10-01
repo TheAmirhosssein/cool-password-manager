@@ -7,9 +7,9 @@ import (
 )
 
 type Authenticator struct {
-	Barcode []byte
-	Secret  string
-	URL     string
+	QrCode []byte
+	Secret string
+	URL    string
 }
 
 type AuthenticatorAdaptor struct {
@@ -36,7 +36,7 @@ func (a *AuthenticatorAdaptor) GenerateQRCode(accountName string) (Authenticator
 		return Authenticator{}, err
 	}
 
-	return Authenticator{Barcode: png, Secret: key.Secret(), URL: key.URL()}, nil
+	return Authenticator{QrCode: png, Secret: key.Secret(), URL: key.URL()}, nil
 }
 
 func (a *AuthenticatorAdaptor) VerifyCode(secret, code string) bool {

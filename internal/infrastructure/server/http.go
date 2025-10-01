@@ -1,31 +1,55 @@
 package server
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"time"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/router"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/httperror"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/database"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/redis"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func Run(conf *config.Config) {
+func Run(ctx context.Context, conf *config.Config) error {
 	server := gin.Default()
 
-	config := cors.Config{
+	server.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Authorization", "Content-Type", "Bearer"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-	}
-	config.AllowAllOrigins = true
+		AllowAllOrigins:  true,
+	}))
 
-	server.Use(cors.New(config))
-	router.AuthHandler(server, conf)
+	db := database.GetDb(ctx)
+	redisClient := redis.GetClient()
+
+	server.LoadHTMLGlob(conf.APP.RootPath + conf.APP.TemplatePath)
+
+	router.AuthRouter(server, conf, db, redisClient)
 	httperror.ErrorServer(server, conf)
 
-	server.Run(fmt.Sprintf("%v:%v", conf.HTTP.Host, conf.HTTP.Port))
+	srv := &http.Server{
+		Addr:    fmt.Sprintf("%v:%v", conf.HTTP.Host, conf.HTTP.Port),
+		Handler: server,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return srv.Shutdown(shutdownCtx)
 }

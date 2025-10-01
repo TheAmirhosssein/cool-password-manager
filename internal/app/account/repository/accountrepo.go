@@ -67,7 +67,7 @@ func (r accountRepo) Update(ctx context.Context, account entity.Account) error {
 }
 
 func (r accountRepo) ExistByUsername(ctx context.Context, username string) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 WHERE username = $1) FROM accounts"
+	query := "SELECT EXISTS(SELECT 1 FROM accounts WHERE username = $1)"
 
 	var exist bool
 	err := r.db.QueryRow(ctx, query, username).Scan(&exist)

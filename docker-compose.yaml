@@ -11,7 +11,7 @@ services:
   redis:
     image: redis
     ports:
-      - "6377:6379"
+      - "6379:6379"
 
 volumes:
   data:
