@@ -9,6 +9,7 @@ import (
 type Authenticator struct {
 	Barcode []byte
 	Secret  string
+	URL     string
 }
 
 type AuthenticatorAdaptor struct {
@@ -35,5 +36,9 @@ func (a *AuthenticatorAdaptor) GenerateQRCode(accountName string) (Authenticator
 		return Authenticator{}, err
 	}
 
-	return Authenticator{Barcode: png, Secret: key.Secret()}, nil
+	return Authenticator{Barcode: png, Secret: key.Secret(), URL: key.URL()}, nil
+}
+
+func (a *AuthenticatorAdaptor) VerifyCode(secret, code string) bool {
+	return totp.Validate(code, secret)
 }

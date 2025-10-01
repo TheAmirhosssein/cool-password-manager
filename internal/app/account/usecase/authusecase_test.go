@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account"
@@ -14,9 +15,12 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/database"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/totp"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
+	"github.com/TheAmirhosssein/cool-password-manage/pkg/encrypt"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
+	googleTotp "github.com/pquerna/otp/totp"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )
@@ -178,6 +182,74 @@ func TestAuthUsecase_CreateTwoFactor(t *testing.T) {
 				require.True(t, tc.expectTF)
 				require.Equal(t, tc.username, tf.Username)
 				require.NotEmpty(t, tf.ID)
+			}
+		})
+	}
+}
+
+func TestAuthUsecase_Login(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	johnDoe := seed.AccountJohnDoe
+	twoFactor := seed.TwoFactorJohnDoe // seeded in `seed.CreateTowFactorSeed`
+
+	// setup usecase with real authenticator
+	u := setupAuthUsecase()
+
+	// decrypt JohnDoe’s secret so we can generate a valid TOTP code
+	key, err := config.GetTestConfig().GetAESSecretKey()
+	require.NoError(t, err)
+	secret, err := encrypt.DecryptAESSecret(key, johnDoe.Secret)
+	require.NoError(t, err)
+
+	validCode, err := googleTotp.GenerateCode(secret, time.Now())
+	require.NoError(t, err)
+
+	testcases := []struct {
+		name        string
+		twoFactorID types.CacheID
+		code        string
+		expectedErr error
+		expectAcc   bool
+	}{
+		{
+			name:        "success login",
+			twoFactorID: twoFactor.ID,
+			code:        validCode,
+			expectedErr: nil,
+			expectAcc:   true,
+		},
+		{
+			name:        "two factor does not exist",
+			twoFactorID: "nonexistent-id",
+			code:        "123456",
+			expectedErr: account.AuthTwoFactorDoesNotExist,
+			expectAcc:   false,
+		},
+		{
+			name:        "invalid verification code",
+			twoFactorID: twoFactor.ID,
+			code:        "000000",
+			expectedErr: account.AuthInvalidVerificationCode,
+			expectAcc:   false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			acc, err := u.Login(ctx, tc.twoFactorID, tc.code)
+
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+				require.Equal(t, entity.Account{}, acc)
+			} else {
+				require.NoError(t, err)
+				require.True(t, tc.expectAcc)
+				require.Equal(t, johnDoe.Username, acc.Username)
+				require.NotEmpty(t, acc.Secret)
 			}
 		})
 	}

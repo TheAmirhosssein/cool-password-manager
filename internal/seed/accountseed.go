@@ -26,6 +26,7 @@ var (
 		FirstName: "John",
 		LastName:  "Doe",
 		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou", // 123
+		Secret:    "UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE",
 	}
 	AccountMattChampion = entity.Account{
 		Entity:    base.Entity{ID: idUserMattChampion},
@@ -40,8 +41,8 @@ var (
 func createAccountSeed(ctx context.Context, db *pgxpool.Pool) {
 	query := `
 	INSERT INTO accounts(username, email, first_name, last_name, password, secret) 
-	VALUES ('j.doe', 'j.doe@gmail.com', 'John', 'Doe', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', 'something'),
-		   ('m.champion', 'm.champion@gmail.com', 'Matt', 'Champion', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', 'something')
+	VALUES ('j.doe', 'j.doe@gmail.com', 'John', 'Doe', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', 'UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE'),
+		   ('m.champion', 'm.champion@gmail.com', 'Matt', 'Champion', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', 'UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE')
 	`
 	_, err := db.Exec(ctx, query)
 	if err != nil {

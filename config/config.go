@@ -1,7 +1,7 @@
 package config
 
 import (
-	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -90,24 +90,13 @@ func GetTestConfig() *Config {
 	return &Config{}
 }
 
-func (c *Config) GetAESSecretKey() string {
+func (c *Config) GetAESSecretKey() ([]byte, error) {
 	if InTestMode() {
-		key, err := generateKey()
-		if err != nil {
-			panic(err)
-		}
-		return string(key)
+		return base64.StdEncoding.DecodeString("syaZbz9ca3SZ51GUdyx3F//e89Hgfr2XuHHn4VdnMQU=")
 	}
 
-	return c.APP.SecretKey
-}
-
-func generateKey() ([]byte, error) {
-	key := make([]byte, 32)
-	if _, err := rand.Read(key); err != nil {
-		return nil, err
-	}
-	return key, nil
+	keyBytes, err := base64.StdEncoding.DecodeString(c.APP.SecretKey)
+	return keyBytes, err
 }
 
 func InTestMode() bool {
