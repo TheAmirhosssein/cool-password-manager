@@ -6,25 +6,34 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
+type Authenticator struct {
+	Barcode []byte
+	Secret  string
+}
+
 type AuthenticatorAdaptor struct {
 	Issuer string
 }
 
-func (a *AuthenticatorAdaptor) GenerateQRCode(accountName string) ([]byte, string, error) {
+func NewAuthenticatorAdaptor(issuer string) AuthenticatorAdaptor {
+	return AuthenticatorAdaptor{Issuer: issuer}
+}
+
+func (a *AuthenticatorAdaptor) GenerateQRCode(accountName string) (Authenticator, error) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      a.Issuer,
 		AccountName: accountName,
 	})
 	if err != nil {
 		log.ErrorLogger.Error("error at generation authenticator qr code", "error", err.Error(), "account_name", accountName)
-		return nil, "", err
+		return Authenticator{}, err
 	}
 
 	png, err := qrcode.Encode(key.URL(), qrcode.Medium, 256)
 	if err != nil {
 		log.ErrorLogger.Error("error at encoding qr code to png", "error", err.Error(), "account_name", accountName)
-		return nil, "", err
+		return Authenticator{}, err
 	}
 
-	return png, key.Secret(), nil
+	return Authenticator{Barcode: png, Secret: key.Secret()}, nil
 }
