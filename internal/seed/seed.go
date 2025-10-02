@@ -8,4 +8,5 @@ import (
 
 func CreateSeed(ctx context.Context, db *pgxpool.Pool) {
 	createAccountSeed(ctx, db)
+	createGroupSeed(ctx, db)
 }
