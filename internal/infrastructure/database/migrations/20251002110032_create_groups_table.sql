@@ -6,10 +6,11 @@ CREATE TABLE IF NOT EXISTS groups(
     description TEXT,
     owner_id INT REFERENCES accounts(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    UNIQUE (name, owner_id)
 );
 
-CREATE TABLE accounts_groups (
+CREATE TABLE groups_accounts (
     account_id INT REFERENCES accounts(id) ON DELETE CASCADE,
     group_id INT REFERENCES groups(id) ON DELETE CASCADE,
     PRIMARY KEY(account_id, group_id)
@@ -18,6 +19,6 @@ CREATE TABLE accounts_groups (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS accounts_groups;
+DROP TABLE IF EXISTS groups_accounts;
 DROP TABLE IF EXISTS groups;
 -- +goose StatementEnd
