@@ -2,25 +2,25 @@ package router
 
 import (
 	"github.com/TheAmirhosssein/cool-password-manage/config"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/handler"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/totp"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/redis/go-redis/v9"
 )
 
-func AuthRouter(server *gin.Engine, conf *config.Config, db *pgxpool.Pool, redis *redis.Client) {
-	// create repository
-	accountRepo := repository.NewAccountRepository(db)
-	twoFactorRepo := repository.NewTwoFactorRepository(redis)
-	authenticator := totp.NewAuthenticatorAdaptor(conf.Name)
+func authRouter(
+	server *gin.Engine, aRepo repository.AccountRepository, tfRepo repository.TwoFactorRepository, totp totp.AuthenticatorAdaptor,
+	conf *config.Config,
+) {
+	authUsecase := usecase.NewAuthUsecase(aRepo, tfRepo, totp, conf)
 
-	// create usecase
-	authUsecase := usecase.NewAuthUsecase(accountRepo, twoFactorRepo, authenticator, conf)
-
-	server.Any("/sign-up", func(ctx *gin.Context) {
+	server.Any(http.PathSignUp, func(ctx *gin.Context) {
 		handler.SignUpHandler(ctx, authUsecase)
+	})
+
+	server.Any(http.PathTwoFactor, func(ctx *gin.Context) {
+		handler.TwoFactorHandler(ctx, authUsecase)
 	})
 }

@@ -9,8 +9,11 @@
     <h1>Scan this QR Code</h1>
     <img src="data:image/png;base64,{{ .QRCode }}" alt="Wrong Color" />
     <div>
-        <a href="/two-factor/{{ .twoFactorID }}">Verify</a>
+        <a href="{{ .twoFactorPath }}">Verify</a>
     </div>
+    <script>
+        localStorage.setItem("twoFactorID", "{{ .twoFactorID }}")
+    </script>
 </body>
 
 </html>

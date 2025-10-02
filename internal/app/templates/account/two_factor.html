@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Verification Code</title>
+</head>
+
+<body>
+    <h1>Enter Verification Code</h1>
+    <form action="{{ .action }}" method="post">
+        <label for="verification_code">Enter the code</label>
+        <input type="text" id="code" name="verification_code" required>
+        <input type="hidden" name="two_factor_id" id="twoFactorID">
+        <button type="submit">verify</button>
+    </form>
+    <script>
+        document.getElementById("twoFactorID").value = localStorage.getItem("twoFactorID");
+    </script>
+    {{- if .error }}
+    <p style="color: red;">{{ .message }}</p>
+    {{- end }}
+</body>
+
+</html>

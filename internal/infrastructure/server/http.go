@@ -33,8 +33,8 @@ func Run(ctx context.Context, conf *config.Config) error {
 
 	server.LoadHTMLGlob(conf.APP.RootPath + conf.APP.TemplatePath)
 
-	router.AuthRouter(server, conf, db, redisClient)
-	httperror.ErrorServer(server, conf)
+	router.AccountRouter(server, conf, db, redisClient)
+	httperror.ErrorServer(server)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%v:%v", conf.HTTP.Host, conf.HTTP.Port),

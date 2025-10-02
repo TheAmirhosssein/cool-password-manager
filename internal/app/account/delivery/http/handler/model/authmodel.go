@@ -7,3 +7,8 @@ type SignUpModel struct {
 	LastName  string `form:"last_name" binding:"required"`
 	Password  string `form:"password" binding:"required"`
 }
+
+type TwoFactorModel struct {
+	TwoFactorID      string `form:"two_factor_id" binding:"required"`
+	VerificationCode string `form:"verification_code" binding:"required"`
+}
