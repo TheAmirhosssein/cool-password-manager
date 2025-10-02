@@ -26,11 +26,13 @@ type (
 	}
 
 	APP struct {
-		Name         string `env-required:"true" yaml:"name"`
-		Version      string `env-required:"true" yaml:"version"`
-		AESKey       string `env-required:"true" yaml:"aes_key" env:"AES_KEY"`
-		RootPath     string
-		TemplatePath string `env-required:"true" yaml:"template_path" env:"TEMPLATE_PATH"`
+		Name              string `env-required:"true" yaml:"name"`
+		Version           string `env-required:"true" yaml:"version"`
+		AESKey            string `env-required:"true" yaml:"aes_key" env:"AES_KEY"`
+		RootPath          string
+		TemplatePath      string `env-required:"true" yaml:"template_path" env:"TEMPLATE_PATH"`
+		TwoFactorDuration int    `env-required:"true" yaml:"two_factor_duration" env:"TWO_FACTOR_DURATION"`
+		SecretKey         string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
 	}
 
 	HTTP struct {

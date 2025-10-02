@@ -113,7 +113,7 @@ func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username, password st
 		return entity.TwoFactor{}, errors.NewServerError()
 	}
 
-	duration := time.Minute * 2
+	duration := time.Minute * time.Duration(u.config.TwoFactorDuration)
 	twoFactor := entity.TwoFactor{ID: types.CacheID(twoFactorID), Username: username, Duration: duration}
 
 	err = u.twoFactorRepo.Create(ctx, twoFactor)

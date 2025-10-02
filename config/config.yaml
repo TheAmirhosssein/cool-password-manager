@@ -3,6 +3,7 @@ app:
   version: "1.0.0"
   issuer: "cool-password-manager"
   template_path: "/internal/app/templates/**/*.html"
+  two_factor_duration: 20
 
 http:
   port: "8080"
