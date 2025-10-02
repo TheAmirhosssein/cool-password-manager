@@ -20,6 +20,10 @@ func authRouter(
 		handler.SignUpHandler(ctx, authUsecase)
 	})
 
+	server.Any(http.PathLogin, func(ctx *gin.Context) {
+		handler.LoginHandler(ctx, authUsecase)
+	})
+
 	server.Any(http.PathTwoFactor, func(ctx *gin.Context) {
 		handler.TwoFactorHandler(ctx, authUsecase)
 	})
