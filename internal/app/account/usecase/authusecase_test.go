@@ -69,22 +69,20 @@ func TestAuthUsecase_SignUp(t *testing.T) {
 	johnDoe := seed.AccountJohnDoe
 
 	testcases := []struct {
-		name         string
-		account      entity.Account
-		expectedErr  error
-		expectSecret bool
+		name        string
+		account     entity.Account
+		expectedErr error
 	}{
 		{
 			name: "success signup",
 			account: entity.Account{
 				Username:  "new_user",
-				Password:  "password123",
+				Password:  "Pas!sword@123",
 				Email:     "new_user@example.com",
 				FirstName: "New",
 				LastName:  "User",
 			},
-			expectedErr:  nil,
-			expectSecret: true,
+			expectedErr: nil,
 		},
 		{
 			name: "username already exists",
@@ -95,8 +93,7 @@ func TestAuthUsecase_SignUp(t *testing.T) {
 				FirstName: "Dup",
 				LastName:  "User",
 			},
-			expectedErr:  account.AuthUsernameExist,
-			expectSecret: false,
+			expectedErr: account.AuthUsernameExist,
 		},
 		{
 			name: "email already exists",
@@ -107,8 +104,18 @@ func TestAuthUsecase_SignUp(t *testing.T) {
 				FirstName: "Dup",
 				LastName:  "User",
 			},
-			expectedErr:  account.AuthEmailExist,
-			expectSecret: false,
+			expectedErr: account.AuthEmailExist,
+		},
+		{
+			name: "invalid password",
+			account: entity.Account{
+				Username:  "new_user",
+				Password:  "123",
+				Email:     "new_user@example.com",
+				FirstName: "New",
+				LastName:  "User",
+			},
+			expectedErr: account.AuthInvalidPassword,
 		},
 	}
 

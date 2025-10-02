@@ -15,6 +15,7 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/encrypt"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
+	"github.com/TheAmirhosssein/cool-password-manage/pkg/validation"
 )
 
 type AuthUsecase struct {
@@ -48,6 +49,11 @@ func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Auth
 
 	if existByEmail {
 		return totp.Authenticator{}, account.AuthEmailExist
+	}
+
+	validPassword := validation.IsValidPassword(acc.Password)
+	if !validPassword {
+		return totp.Authenticator{}, account.AuthInvalidPassword
 	}
 
 	authenticator, err := u.authenticator.GenerateQRCode(acc.Username)
