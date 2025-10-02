@@ -4,11 +4,10 @@ import (
 	"encoding/base64"
 	"net/http"
 
-	httpPath "github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/handler/model"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
-	"github.com/TheAmirhosssein/cool-password-manage/internal/app/httperror"
+	localHttp "github.com/TheAmirhosssein/cool-password-manage/internal/app/http"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
@@ -21,7 +20,7 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 	switch ctx.Request.Method {
 
 	case http.MethodGet:
-		ctx.HTML(http.StatusOK, template, gin.H{"action": httpPath.PathSignUp})
+		ctx.HTML(http.StatusOK, template, gin.H{"action": localHttp.PathSignUp})
 
 	case http.MethodPost:
 		var form model.SignUpModel
@@ -40,13 +39,13 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 
 		authenticator, err := usecase.SignUp(ctx, acc)
 		if err != nil {
-			httperror.HandleError(ctx, errors.Error2Custom(err), template)
+			localHttp.HandleError(ctx, errors.Error2Custom(err), template)
 			return
 		}
 
 		twoFactor, err := usecase.CreateTwoFactor(ctx, acc.Username, acc.Password)
 		if err != nil {
-			httperror.HandleError(ctx, errors.Error2Custom(err), template)
+			localHttp.HandleError(ctx, errors.Error2Custom(err), template)
 			return
 		}
 
@@ -55,7 +54,7 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 
 		if err := session.Save(); err != nil {
 			log.ErrorLogger.Error("can not set two factor session", "error", err.Error(), "username", acc.Username)
-			httperror.NewServerError(ctx)
+			localHttp.NewServerError(ctx)
 			return
 		}
 
@@ -63,7 +62,7 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 
 		ctx.HTML(http.StatusOK, "qrcode.html", gin.H{
 			"QRCode":        base64Img,
-			"twoFactorPath": httpPath.PathTwoFactor,
+			"twoFactorPath": localHttp.PathTwoFactor,
 		})
 	}
 }
@@ -73,7 +72,7 @@ func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 
 	switch ctx.Request.Method {
 	case http.MethodGet:
-		ctx.HTML(http.StatusOK, templateName, gin.H{"action": httpPath.PathTwoFactor})
+		ctx.HTML(http.StatusOK, templateName, gin.H{"action": localHttp.PathTwoFactor})
 
 	case http.MethodPost:
 		var form model.SignUpModel
@@ -84,7 +83,7 @@ func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 
 		twoFactor, err := usecase.CreateTwoFactor(ctx, form.Username, form.Password)
 		if err != nil {
-			httperror.HandleError(ctx, errors.Error2Custom(err), templateName)
+			localHttp.HandleError(ctx, errors.Error2Custom(err), templateName)
 			return
 		}
 
@@ -92,13 +91,13 @@ func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		session.Set("twoFactorID", string(twoFactor.ID))
 
 		if err := session.Save(); err != nil {
-			httperror.NewServerError(ctx)
+			localHttp.NewServerError(ctx)
 			return
 		}
 
 		ctx.HTML(http.StatusOK, "qrcode.html", gin.H{
 			"twoFactorID":   twoFactor.ID,
-			"twoFactorPath": httpPath.PathTwoFactor,
+			"twoFactorPath": localHttp.PathTwoFactor,
 		})
 	}
 
@@ -110,7 +109,7 @@ func TwoFactorHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 	switch ctx.Request.Method {
 
 	case http.MethodGet:
-		ctx.HTML(http.StatusOK, templateName, gin.H{"action": httpPath.PathTwoFactor})
+		ctx.HTML(http.StatusOK, templateName, gin.H{"action": localHttp.PathTwoFactor})
 
 	case http.MethodPost:
 		var form model.TwoFactorModel
@@ -122,24 +121,24 @@ func TwoFactorHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		session := sessions.Default(ctx)
 		twoFactorID, ok := session.Get("twoFactorID").(string)
 		if !ok {
-			httperror.NewServerError(ctx)
+			localHttp.NewServerError(ctx)
 			return
 		}
 
 		account, err := usecase.Login(ctx, types.CacheID(twoFactorID), form.VerificationCode)
 		if err != nil {
-			httperror.HandleError(ctx, errors.Error2Custom(err), templateName)
+			localHttp.HandleError(ctx, errors.Error2Custom(err), templateName)
 			return
 		}
 
 		session.Set("username", account.Username)
 
 		if err := session.Save(); err != nil {
-			httperror.NewServerError(ctx)
+			localHttp.NewServerError(ctx)
 			return
 		}
 
-		ctx.Redirect(http.StatusPermanentRedirect, httpPath.PathMe)
+		ctx.Redirect(http.StatusPermanentRedirect, localHttp.PathMe)
 		ctx.Abort()
 	}
 }

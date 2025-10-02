@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/handler"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/http"
 	"github.com/gin-gonic/gin"
 )
 

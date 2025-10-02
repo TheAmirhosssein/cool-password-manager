@@ -9,7 +9,7 @@ import (
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/router"
-	"github.com/TheAmirhosssein/cool-password-manage/internal/app/httperror"
+	localHttp "github.com/TheAmirhosssein/cool-password-manage/internal/app/http"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/database"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/redis"
 	"github.com/gin-contrib/cors"
@@ -34,7 +34,7 @@ func Run(ctx context.Context, conf *config.Config) error {
 	server.LoadHTMLGlob(conf.APP.RootPath + conf.APP.TemplatePath)
 
 	router.AccountRouter(server, conf, db, redisClient)
-	httperror.ErrorServer(server)
+	localHttp.ErrorServer(server)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%v:%v", conf.HTTP.Host, conf.HTTP.Port),
