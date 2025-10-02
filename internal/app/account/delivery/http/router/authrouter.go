@@ -16,15 +16,15 @@ func authRouter(
 ) {
 	authUsecase := usecase.NewAuthUsecase(aRepo, tfRepo, totp, conf)
 
-	server.Any(http.PathSignUp, func(ctx *gin.Context) {
+	server.Any(http.PathSignUp, http.GuestOnly(), func(ctx *gin.Context) {
 		handler.SignUpHandler(ctx, authUsecase)
 	})
 
-	server.Any(http.PathLogin, func(ctx *gin.Context) {
+	server.Any(http.PathLogin, http.GuestOnly(), func(ctx *gin.Context) {
 		handler.LoginHandler(ctx, authUsecase)
 	})
 
-	server.Any(http.PathTwoFactor, func(ctx *gin.Context) {
+	server.Any(http.PathTwoFactor, http.GuestOnly(), func(ctx *gin.Context) {
 		handler.TwoFactorHandler(ctx, authUsecase)
 	})
 }

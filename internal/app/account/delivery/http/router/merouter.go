@@ -7,6 +7,8 @@ import (
 )
 
 func meRouter(server *gin.Engine) {
+	server.Use(http.AuthRequired())
+
 	server.GET(http.PathMe, func(ctx *gin.Context) {
 		handler.MeHandler(ctx)
 	})
