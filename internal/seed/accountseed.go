@@ -17,8 +17,8 @@ const (
 	idUserTyler
 	idUserEarl
 	idUserFrankOcean
-	idUserThomYorke
-	idUserJonnyGreenwood
+	idUserKendrickLamar
+	idUserJayRock
 	idUserColinGreenwood
 )
 
@@ -91,30 +91,39 @@ var (
 		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
-	AccountThomYorke = entity.Account{
-		Entity:    base.Entity{ID: idUserThomYorke},
-		Username:  "thom",
-		Email:     "thom@gmail.com",
-		FirstName: "Thom",
-		LastName:  "Yorke",
+	AccountKendrickLamar = entity.Account{
+		Entity:    base.Entity{ID: idUserKendrickLamar},
+		Username:  "k.lamar",
+		Email:     "k.lamar@gmail.com",
+		FirstName: "Kendrick",
+		LastName:  "Lamar",
 		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
-	AccountJonnyGreenwood = entity.Account{
-		Entity:    base.Entity{ID: idUserJonnyGreenwood},
-		Username:  "jonny",
-		Email:     "jonny@gmail.com",
-		FirstName: "Jonny",
-		LastName:  "Greenwood",
+	AccountJayRock = entity.Account{
+		Entity:    base.Entity{ID: idUserJayRock},
+		Username:  "j.rock",
+		Email:     "j.rock@gmail.com",
+		FirstName: "Jay",
+		LastName:  "Rock",
 		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
-	AccountColinGreenwood = entity.Account{
+	AccountSchoolBoyQ = entity.Account{
 		Entity:    base.Entity{ID: idUserColinGreenwood},
-		Username:  "colin",
-		Email:     "colin@gmail.com",
-		FirstName: "Colin",
-		LastName:  "Greenwood",
+		Username:  "schoolboy.q",
+		Email:     "schoolboy.q@gmail.com",
+		FirstName: "SchoolBoy",
+		LastName:  "Q",
+		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
+	}
+
+	AccountAbSoul = entity.Account{
+		Entity:    base.Entity{ID: idUserColinGreenwood},
+		Username:  "a.soul",
+		Email:     "a.soulq@gmail.com",
+		FirstName: "ab",
+		LastName:  "soul",
 		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 )
@@ -129,9 +138,10 @@ func createAccountSeed(ctx context.Context, db *pgxpool.Pool) {
 	('tyler', 'tyler@gmail.com', 'Tyler', 'The Creator', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
 	('earl', 'earl@gmail.com', 'Earl', 'Sweatshirt', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
 	('frank', 'frank@gmail.com', 'Frank', 'Ocean', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('thom', 'thom@gmail.com', 'Thom', 'Yorke', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('jonny', 'jonny@gmail.com', 'Jonny', 'Greenwood', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('colin', 'colin@gmail.com', 'Colin', 'Greenwood', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', '')
+	('k.lamar', 'k.lamar@gmail.com', 'Kendrick', 'Lamar', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
+	('j.rock', 'j.rock@gmail.com', 'Jay', 'Rock', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
+	('schoolboy.q', 'schoolboy.q@gmail.com', 'SchoolBoy', 'Q', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
+	('a.soul', 'a.soul@gmail.com', 'Ab', 'Soul', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', '');
 	`
 	_, err := db.Exec(ctx, query)
 	if err != nil {

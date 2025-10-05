@@ -2,7 +2,6 @@ package seed
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
@@ -38,48 +37,47 @@ var (
 			AccountTyler,
 			AccountEarl,
 			AccountFrankOcean,
+			AccountMattChampion,
 		},
 	}
 
-	GroupRadiohead = entity.Group{
+	GroupBlackHippy = entity.Group{
 		Entity:      base.Entity{ID: idGroupRadiohead},
-		Name:        "Radiohead",
-		Description: types.NullString{String: "Radiohead Band Members", Valid: true},
-		Owner:       AccountThomYorke,
+		Name:        "Black Hippy",
+		Description: types.NullString{String: "Black Hippy Band Members", Valid: true},
+		Owner:       AccountKendrickLamar,
 		Members: []entity.Account{
-			AccountThomYorke,
-			AccountJonnyGreenwood,
-			AccountColinGreenwood,
+			AccountKendrickLamar,
+			AccountJayRock,
+			AccountSchoolBoyQ,
+			AccountAbSoul,
 		},
 	}
 )
 
 func createGroupSeed(ctx context.Context, db *pgxpool.Pool) {
-	var groups = []entity.Group{
-		GroupBrockhampton,
-		GroupOddFuture,
-		GroupRadiohead,
+	gQuery := `
+	INSERT INTO groups(name, description, owner_id)
+	VALUES ('Brockhampton', 'Brockhampton Band Members', 3),
+		('Odd Future', 'Odd Future Band Members', 5),
+		('Black Hippy', 'Black Hippy', 8);
+	`
+
+	_, err := db.Exec(ctx, gQuery)
+	if err != nil {
+		panic(err)
 	}
 
-	for _, g := range groups {
-		query := `
-		INSERT INTO groups(name, description, owner_id)
-		VALUES ($1, $2, $3)
-		RETURNING id;
-		`
-		var groupID int
-		err := db.QueryRow(ctx, query, g.Name, g.Description.String, g.Owner.Entity.ID).Scan(&groupID)
-		if err != nil {
-			panic(fmt.Errorf("failed to insert group %s: %w", g.Name, err))
-		}
+	gaQuery := `
+	INSERT INTO groups_accounts(group_id, account_id)
+	VALUES (1, 2), (1, 3), (1, 4), -- Brockhampton
+		(2, 5), (2, 6), (2, 7), -- Odd Future
+		(3, 8), (3, 9), (3, 10), (3, 11); -- Black Hippy
 
-		for _, m := range g.Members {
-			_, err := db.Exec(ctx,
-				"INSERT INTO groups_accounts(account_id, group_id) VALUES ($1, $2)",
-				m.Entity.ID, groupID)
-			if err != nil {
-				panic(fmt.Errorf("failed to add member %s to group %s: %w", m.Username, g.Name, err))
-			}
-		}
+	`
+
+	_, err = db.Exec(ctx, gaQuery)
+	if err != nil {
+		panic(err)
 	}
 }
