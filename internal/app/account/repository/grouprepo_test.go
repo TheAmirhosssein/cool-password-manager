@@ -52,7 +52,7 @@ func TestGroupRepository_Create(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -168,15 +168,75 @@ func TestGroupRepository_AddAccount(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := repo.AddAccount(ctx, tc.groupID, tc.accounts)
+			err := repo.AddAccounts(ctx, tc.groupID, tc.accounts)
 			if tc.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGroupRepository_RemoveAccount(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewGroupRepository(pgTestSuite.db)
+
+	testcases := []struct {
+		name     string
+		groupID  types.ID
+		accounts []entity.Account
+		wantErr  bool
+	}{
+		{
+			name:    "remove single account from group",
+			groupID: seed.GroupBrockhampton.Entity.ID,
+			accounts: []entity.Account{
+				seed.AccountJohnDoe,
+			},
+			wantErr: false,
+		},
+		{
+			name:    "remove multiple accounts from group",
+			groupID: seed.GroupBlackHippy.Entity.ID,
+			accounts: []entity.Account{
+				seed.AccountJohnDoe,
+				seed.AccountEarl,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range testcases {
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := repo.RemoveAccounts(ctx, tc.groupID, tc.accounts)
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+
+				if len(tc.accounts) > 0 && tc.groupID > 0 {
+					for _, acc := range tc.accounts {
+						var exists bool
+						query := `
+							SELECT EXISTS (
+								SELECT 1 FROM groups_accounts
+								WHERE group_id = $1 AND account_id = $2
+							)
+						`
+						err := pgTestSuite.db.QueryRow(ctx, query, tc.groupID, acc.Entity.ID).Scan(&exists)
+						require.NoError(t, err)
+						require.False(t, exists)
+					}
+				}
 			}
 		})
 	}

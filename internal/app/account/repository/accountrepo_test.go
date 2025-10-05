@@ -103,7 +103,7 @@ func TestAccountRepository_Create(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -147,7 +147,7 @@ func TestAccountRepository_ReadByUsername(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -183,7 +183,7 @@ func TestAccountRepository_Update(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 

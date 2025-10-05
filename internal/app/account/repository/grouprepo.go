@@ -15,7 +15,8 @@ import (
 type GroupRepository interface {
 	Create(ctx context.Context, group entity.Group) error
 	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, error)
-	AddAccount(ctx context.Context, groupID types.ID, accounts []entity.Account) error
+	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
+	RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 }
 
 type groupRepo struct {
@@ -98,7 +99,11 @@ func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([
 	return groups, nil
 }
 
-func (repo groupRepo) AddAccount(ctx context.Context, groupID types.ID, accounts []entity.Account) error {
+func (repo groupRepo) AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error {
+	if len(accounts) == 0 {
+		return nil
+	}
+
 	var (
 		values []string
 		args   []any
@@ -116,6 +121,29 @@ func (repo groupRepo) AddAccount(ctx context.Context, groupID types.ID, accounts
 	query := fmt.Sprintf(
 		"INSERT INTO groups_accounts (group_id, account_id) VALUES %s",
 		strings.Join(values, ","),
+	)
+
+	_, err := repo.db.Exec(ctx, query, args...)
+	return err
+}
+
+func (repo groupRepo) RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error {
+	var (
+		args   []any
+		params []string
+	)
+
+	args = append(args, groupID)
+
+	for i, account := range accounts {
+		args = append(args, account.Entity.ID)
+		params = append(params, fmt.Sprintf("$%d", i+2))
+	}
+
+	query := fmt.Sprintf(
+		`DELETE FROM groups_accounts 
+		 WHERE group_id = $1 AND account_id IN (%s)`,
+		strings.Join(params, ","),
 	)
 
 	_, err := repo.db.Exec(ctx, query, args...)
