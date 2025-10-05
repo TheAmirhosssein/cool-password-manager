@@ -15,6 +15,7 @@ import (
 type GroupRepository interface {
 	Create(ctx context.Context, group entity.Group) error
 	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, error)
+	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 	RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 }
@@ -97,6 +98,41 @@ func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([
 	}
 
 	return groups, nil
+}
+
+func (repo groupRepo) ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error) {
+	query := `
+	SELECT g.id, g.name, g.description,
+	       o.id, o.username, o.first_name, o.last_name, o.email,
+	       m.id, m.username, m.first_name, m.last_name, m.email
+	FROM groups g
+	JOIN accounts o ON o.id = g.owner_id
+	JOIN groups_accounts ga ON ga.group_id = g.id
+	JOIN accounts m ON m.id = ga.account_id
+	WHERE g.id = $1 AND ga.account_id = $2
+	`
+
+	rows, err := repo.db.Query(ctx, query, id, memberID)
+	if err != nil {
+		return entity.Group{}, err
+	}
+
+	var g entity.Group
+	for rows.Next() {
+		var member entity.Account
+		err := rows.Scan(
+			&g.Entity.ID, &g.Name, &g.Description,
+			&g.Owner.Entity.ID, &g.Owner.Username, &g.Owner.FirstName, &g.Owner.LastName, &g.Owner.Email,
+			&member.Entity.ID, &member.Username, &member.FirstName, &member.LastName, &member.Email,
+		)
+		if err != nil {
+			return entity.Group{}, err
+		}
+
+		g.Members = append(g.Members, member)
+	}
+
+	return g, nil
 }
 
 func (repo groupRepo) AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error {

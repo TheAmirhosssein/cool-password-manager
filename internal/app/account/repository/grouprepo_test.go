@@ -121,6 +121,70 @@ func TestGroupRepository_Read(t *testing.T) {
 	}
 }
 
+func TestGroupRepository_ReadOne(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewGroupRepository(pgTestSuite.db)
+
+	testcases := []struct {
+		name     string
+		groupID  types.ID
+		memberID types.ID
+		empty    bool
+	}{
+		{
+			name:     "valid group and valid member",
+			groupID:  seed.GroupBrockhampton.Entity.ID,
+			memberID: seed.AccountMattChampion.Entity.ID,
+			empty:    false,
+		},
+		{
+			name:     "valid group but member not in group",
+			groupID:  seed.GroupBrockhampton.Entity.ID,
+			memberID: seed.AccountEarl.Entity.ID,
+			empty:    true,
+		},
+		{
+			name:     "invalid group id",
+			groupID:  -1,
+			memberID: seed.AccountJohnDoe.Entity.ID,
+			empty:    true,
+		},
+		{
+			name:     "invalid member id",
+			groupID:  seed.GroupBlackHippy.Entity.ID,
+			memberID: -1,
+			empty:    true,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			group, err := repo.ReadOne(ctx, tc.groupID, tc.memberID)
+			if tc.empty {
+				require.Zero(t, group.Entity.ID)
+				require.Empty(t, group.Name)
+				require.Zero(t, group.Owner.Entity.ID)
+				require.Empty(t, group.Owner.Username)
+				require.Empty(t, group.Members)
+			} else {
+				require.NoError(t, err)
+				require.NotZero(t, group.Entity.ID)
+				require.NotEmpty(t, group.Name)
+				require.NotZero(t, group.Owner.Entity.ID)
+				require.NotEmpty(t, group.Owner.Username)
+				require.NotEmpty(t, group.Members)
+				for _, m := range group.Members {
+					require.NotZero(t, m.Entity.ID)
+					require.NotEmpty(t, m.Username)
+				}
+			}
+		})
+	}
+}
+
 func TestGroupRepository_AddAccount(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
