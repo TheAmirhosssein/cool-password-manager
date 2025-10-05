@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
+	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,6 +14,7 @@ import (
 
 type GroupRepository interface {
 	Create(ctx context.Context, group entity.Group) error
+	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, error)
 	AddAccount(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 }
 
@@ -34,6 +36,66 @@ func (repo groupRepo) Create(ctx context.Context, group entity.Group) error {
 	}
 
 	return nil
+}
+
+func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, error) {
+	query := `
+	SELECT g.id, g.name, g.description,
+	       o.id, o.username, o.first_name, o.last_name, o.email,
+	       m.id, m.username, m.first_name, m.last_name, m.email
+	FROM groups g
+	JOIN accounts o ON o.id = g.owner_id
+	JOIN groups_accounts ga ON ga.group_id = g.id
+	JOIN accounts m ON m.id = ga.account_id
+	WHERE g.id IN (
+		SELECT group_id FROM groups_accounts WHERE account_id = $1
+	)
+	ORDER BY g.id
+	LIMIT $2 OFFSET $3
+	`
+
+	rows, err := repo.db.Query(ctx, query, param.MemberID, param.Limit, param.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	groupMap := make(map[types.ID]*entity.Group)
+
+	for rows.Next() {
+		var (
+			groupID types.ID
+			g       entity.Group
+			owner   entity.Account
+			member  entity.Account
+		)
+
+		err := rows.Scan(
+			&groupID, &g.Name, &g.Description,
+			&owner.Entity.ID, &owner.Username, &owner.FirstName, &owner.LastName, &owner.Email,
+			&member.Entity.ID, &member.Username, &member.FirstName, &member.LastName, &member.Email,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		existing, ok := groupMap[groupID]
+		if !ok {
+			g.Entity.ID = groupID
+			g.Owner = owner
+			g.Members = []entity.Account{member}
+			groupMap[groupID] = &g
+		} else {
+			existing.Members = append(existing.Members, member)
+		}
+	}
+
+	groups := make([]entity.Group, 0, len(groupMap))
+	for _, g := range groupMap {
+		groups = append(groups, *g)
+	}
+
+	return groups, nil
 }
 
 func (repo groupRepo) AddAccount(ctx context.Context, groupID types.ID, accounts []entity.Account) error {

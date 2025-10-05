@@ -6,6 +6,7 @@ import (
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
+	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/utils/base"
@@ -66,6 +67,60 @@ func TestGroupRepository_Create(t *testing.T) {
 	}
 }
 
+func TestGroupRepository_Read(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewGroupRepository(pgTestSuite.db)
+
+	testcases := []struct {
+		name    string
+		param   params.ReadGroupParams
+		wantErr bool
+		wantLen int
+	}{
+		{
+			name: "owner has groups with members",
+			param: params.ReadGroupParams{
+				MemberID: seed.AccountMattChampion.Entity.ID,
+				Limit:    10,
+				Offset:   0,
+			},
+			wantErr: false,
+			wantLen: 1,
+		},
+		{
+			name: "owner has no groups",
+			param: params.ReadGroupParams{
+				MemberID: -1,
+				Limit:    10,
+				Offset:   0,
+			},
+			wantErr: false,
+			wantLen: 0,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			groups, err := repo.Read(ctx, tc.param)
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				for _, g := range groups {
+					require.NotZero(t, g.Entity.ID)
+					require.NotEmpty(t, g.Name)
+					require.NotZero(t, g.Owner.Entity.ID)
+					require.NotEmpty(t, g.Owner.Username)
+					require.NotEmpty(t, g.Members)
+				}
+			}
+		})
+	}
+}
+
 func TestGroupRepository_AddAccount(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -87,7 +142,7 @@ func TestGroupRepository_AddAccount(t *testing.T) {
 		},
 		{
 			name:    "add multiple accounts to group",
-			groupID: seed.GroupRadiohead.Entity.ID,
+			groupID: seed.GroupBlackHippy.Entity.ID,
 			accounts: []entity.Account{
 				seed.AccountJohnDoe,
 				seed.AccountEarl,
