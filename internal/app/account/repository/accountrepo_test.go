@@ -10,6 +10,7 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/database"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -152,6 +153,49 @@ func TestAccountRepository_ReadByUsername(t *testing.T) {
 			t.Parallel()
 
 			account, err := repo.ReadByUsername(ctx, tc.username)
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expect.Username, account.Username)
+				require.Equal(t, tc.expect.Email, account.Email)
+				require.Equal(t, tc.expect.Secret, account.Secret)
+			}
+		})
+	}
+}
+
+func TestAccountRepository_ReadByID(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewAccountRepository(pgTestSuite.db)
+
+	testcases := []struct {
+		name    string
+		id      types.ID
+		expect  entity.Account
+		wantErr bool
+	}{
+		{
+			name:    "existing user",
+			id:      seed.AccountJohnDoe.Entity.ID,
+			expect:  seed.AccountJohnDoe,
+			wantErr: false,
+		},
+		{
+			name:    "non-existing user",
+			id:      types.ID(0),
+			expect:  entity.Account{},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range testcases {
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			account, err := repo.ReadByID(ctx, tc.id)
 			if tc.wantErr {
 				require.Error(t, err)
 			} else {

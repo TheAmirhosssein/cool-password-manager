@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,6 +13,7 @@ import (
 type AccountRepository interface {
 	Create(ctx context.Context, account entity.Account) error
 	ReadByUsername(ctx context.Context, username string) (entity.Account, error)
+	ReadByID(ctx context.Context, id types.ID) (entity.Account, error)
 	Update(ctx context.Context, account entity.Account) error
 	ExistByUsername(ctx context.Context, username string) (bool, error)
 	ExistByEmail(ctx context.Context, email string) (bool, error)
@@ -48,6 +50,20 @@ func (r accountRepo) ReadByUsername(ctx context.Context, username string) (entit
 
 	if err != nil {
 		log.ErrorLogger.Error("getting account by username", "error", err.Error(), "username", username)
+		return entity.Account{}, err
+	}
+
+	return account, nil
+}
+
+func (r accountRepo) ReadByID(ctx context.Context, id types.ID) (entity.Account, error) {
+	query := "SELECT username, email, secret, password FROM accounts WHERE id = $1"
+
+	var account entity.Account
+	err := r.db.QueryRow(ctx, query, id).Scan(&account.Username, &account.Email, &account.Secret, &account.Password)
+
+	if err != nil {
+		log.ErrorLogger.Error("getting account by id", "error", err.Error(), "id", id)
 		return entity.Account{}, err
 	}
 
