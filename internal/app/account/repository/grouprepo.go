@@ -13,7 +13,7 @@ import (
 )
 
 type GroupRepository interface {
-	Create(ctx context.Context, group entity.Group) error
+	Create(ctx context.Context, group *entity.Group) error
 	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, error)
 	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
@@ -28,10 +28,10 @@ func NewGroupRepository(db *pgxpool.Pool) GroupRepository {
 	return groupRepo{db: db}
 }
 
-func (repo groupRepo) Create(ctx context.Context, group entity.Group) error {
-	query := "INSERT INTO groups (name, description, owner_id) VALUES ($1, $2, $3)"
+func (repo groupRepo) Create(ctx context.Context, group *entity.Group) error {
+	query := "INSERT INTO groups (name, description, owner_id) VALUES ($1, $2, $3) RETURNING id"
 
-	_, err := repo.db.Exec(ctx, query, group.Name, group.Description, group.Owner.Entity.ID)
+	err := repo.db.QueryRow(ctx, query, group.Name, group.Description, group.Owner.Entity.ID).Scan(&group.ID)
 	if err != nil {
 		log.ErrorLogger.Error("error at creating group", "error", err.Error())
 		return err
@@ -160,7 +160,12 @@ func (repo groupRepo) AddAccounts(ctx context.Context, groupID types.ID, account
 	)
 
 	_, err := repo.db.Exec(ctx, query, args...)
-	return err
+	if err != nil {
+		log.ErrorLogger.Error("error at creating group members", "error", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (repo groupRepo) RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error {

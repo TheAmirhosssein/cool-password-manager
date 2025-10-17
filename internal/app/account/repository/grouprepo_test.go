@@ -56,7 +56,7 @@ func TestGroupRepository_Create(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := repo.Create(ctx, tc.group)
+			err := repo.Create(ctx, &tc.group)
 			if tc.wantErr {
 				require.Error(t, err)
 			} else {
