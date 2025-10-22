@@ -5,6 +5,7 @@ import (
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
+	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/param"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
 )
@@ -34,4 +35,8 @@ func (u GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 	}
 
 	return nil
+}
+
+func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int64, error) {
+	return u.groupRepo.Read(ctx, params)
 }

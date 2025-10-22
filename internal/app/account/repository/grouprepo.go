@@ -14,7 +14,7 @@ import (
 
 type GroupRepository interface {
 	Create(ctx context.Context, group *entity.Group) error
-	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, error)
+	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, int64, error)
 	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 	RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
@@ -40,28 +40,39 @@ func (repo groupRepo) Create(ctx context.Context, group *entity.Group) error {
 	return nil
 }
 
-func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, error) {
+func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, int64, error) {
 	query := `
-	SELECT g.id, g.name, g.description,
-	       o.id, o.username, o.first_name, o.last_name, o.email,
-	       m.id, m.username, m.first_name, m.last_name, m.email
-	FROM groups g
-	JOIN accounts o ON o.id = g.owner_id
-	JOIN groups_accounts ga ON ga.group_id = g.id
-	JOIN accounts m ON m.id = ga.account_id
-	WHERE g.id IN (
-		SELECT group_id FROM groups_accounts WHERE account_id = $1
+	WITH data AS (
+		SELECT g.id, g.name, g.description,
+				o.id, o.username, o.first_name, o.last_name, o.email,
+				m.id, m.username, m.first_name, m.last_name, m.email
+		FROM groups g
+		JOIN accounts o ON o.id = g.owner_id
+		JOIN groups_accounts ga ON ga.group_id = g.id
+		JOIN accounts m ON m.id = ga.account_id
+		WHERE g.id IN (
+			SELECT group_id FROM groups_accounts WHERE account_id = $1
+		)
+		ORDER BY g.id
+		LIMIT $2 OFFSET $3
+	),
+	rows_count AS (
+		SELECT COUNT(g.id) AS count
+		FROM groups g
+		WHERE g.id IN (
+			SELECT group_id FROM groups_accounts WHERE account_id = $1
+		)
 	)
-	ORDER BY g.id
-	LIMIT $2 OFFSET $3
+	SELECT rows_count.count, data.* FROM data CROSS JOIN rows_count
 	`
 
 	rows, err := repo.db.Query(ctx, query, param.MemberID, param.Limit, param.Offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
+	var count int64
 	groupMap := make(map[types.ID]*entity.Group)
 
 	for rows.Next() {
@@ -73,12 +84,12 @@ func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([
 		)
 
 		err := rows.Scan(
-			&groupID, &g.Name, &g.Description,
+			&count, &groupID, &g.Name, &g.Description,
 			&owner.Entity.ID, &owner.Username, &owner.FirstName, &owner.LastName, &owner.Email,
 			&member.Entity.ID, &member.Username, &member.FirstName, &member.LastName, &member.Email,
 		)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		existing, ok := groupMap[groupID]
@@ -97,7 +108,7 @@ func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([
 		groups = append(groups, *g)
 	}
 
-	return groups, nil
+	return groups, count, nil
 }
 
 func (repo groupRepo) ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error) {

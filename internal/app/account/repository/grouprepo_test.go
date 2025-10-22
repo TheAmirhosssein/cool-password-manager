@@ -76,6 +76,7 @@ func TestGroupRepository_Read(t *testing.T) {
 		name    string
 		param   params.ReadGroupParams
 		wantErr bool
+		count   int64
 		wantLen int
 	}{
 		{
@@ -86,6 +87,7 @@ func TestGroupRepository_Read(t *testing.T) {
 				Offset:   0,
 			},
 			wantErr: false,
+			count:   1,
 			wantLen: 1,
 		},
 		{
@@ -96,6 +98,7 @@ func TestGroupRepository_Read(t *testing.T) {
 				Offset:   0,
 			},
 			wantErr: false,
+			count:   0,
 			wantLen: 0,
 		},
 	}
@@ -104,11 +107,12 @@ func TestGroupRepository_Read(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			groups, err := repo.Read(ctx, tc.param)
+			groups, count, err := repo.Read(ctx, tc.param)
 			if tc.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, count, tc.count)
 				for _, g := range groups {
 					require.NotZero(t, g.Entity.ID)
 					require.NotEmpty(t, g.Name)
