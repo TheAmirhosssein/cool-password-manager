@@ -189,6 +189,56 @@ func TestGroupRepository_ReadOne(t *testing.T) {
 	}
 }
 
+func TestGroupRepository_Update(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewGroupRepository(pgTestSuite.db)
+
+	testcases := []struct {
+		name        string
+		group       entity.Group
+		wouldChange bool
+	}{
+		{
+			name: "update group name successfully",
+			group: entity.Group{
+				Entity: base.Entity{ID: seed.GroupBrockhampton.Entity.ID},
+				Name:   "Updated Brockhampton",
+				Owner:  seed.GroupBrockhampton.Owner,
+			},
+			wouldChange: true,
+		},
+		{
+			name: "update group name with different owner",
+			group: entity.Group{
+				Entity: base.Entity{ID: seed.GroupBrockhampton.Entity.ID},
+				Name:   "Kendrick Brockhampton",
+				Owner:  seed.AccountKendrickLamar,
+			},
+			wouldChange: false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := repo.Update(ctx, tc.group)
+			require.NoError(t, err)
+
+			query := `SELECT name FROM groups WHERE id = $1`
+			var updatedName string
+			err = pgTestSuite.db.QueryRow(ctx, query, tc.group.Entity.ID).Scan(&updatedName)
+			require.NoError(t, err)
+			if tc.wouldChange {
+				require.Equal(t, tc.group.Name, updatedName)
+			} else {
+				require.NotEqual(t, tc.group.Name, updatedName)
+			}
+		})
+	}
+}
+
 func TestGroupRepository_AddAccount(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

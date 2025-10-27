@@ -16,6 +16,7 @@ type GroupRepository interface {
 	Create(ctx context.Context, group *entity.Group) error
 	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, int64, error)
 	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
+	Update(ctx context.Context, group entity.Group) error
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 	RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 }
@@ -144,6 +145,18 @@ func (repo groupRepo) ReadOne(ctx context.Context, id, memberID types.ID) (entit
 	}
 
 	return g, nil
+}
+
+func (repo groupRepo) Update(ctx context.Context, group entity.Group) error {
+	query := "UPDATE groups SET name = $1, description = $2 WHERE id = $3 AND owner_id = $4"
+
+	_, err := repo.db.Exec(ctx, query, group.Name, group.Description, group.Entity.ID, group.Owner.Entity.ID)
+	if err != nil {
+		log.ErrorLogger.Error("error at updating group", "error", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (repo groupRepo) AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error {
