@@ -300,33 +300,28 @@ func TestGroupRepository_AddAccount(t *testing.T) {
 	}
 }
 
-func TestGroupRepository_RemoveAccount(t *testing.T) {
+func TestGroupRepository_DeleteAllMembers(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	repo := repository.NewGroupRepository(pgTestSuite.db)
 
 	testcases := []struct {
-		name     string
-		groupID  types.ID
-		accounts []entity.Account
-		wantErr  bool
+		name        string
+		groupID     types.ID
+		ownerID     types.ID
+		wouldDelete bool
 	}{
 		{
-			name:    "remove single account from group",
-			groupID: seed.GroupBrockhampton.Entity.ID,
-			accounts: []entity.Account{
-				seed.AccountJohnDoe,
-			},
-			wantErr: false,
+			name:        "successful",
+			groupID:     seed.GroupBlackHippy.Entity.ID,
+			ownerID:     seed.GroupBlackHippy.Owner.Entity.ID,
+			wouldDelete: true,
 		},
 		{
-			name:    "remove multiple accounts from group",
-			groupID: seed.GroupBlackHippy.Entity.ID,
-			accounts: []entity.Account{
-				seed.AccountJohnDoe,
-				seed.AccountEarl,
-			},
-			wantErr: false,
+			name:        "different owner",
+			groupID:     seed.GroupBrockhampton.Entity.ID,
+			ownerID:     seed.GroupBlackHippy.Owner.Entity.ID,
+			wouldDelete: false,
 		},
 	}
 
@@ -335,26 +330,17 @@ func TestGroupRepository_RemoveAccount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := repo.RemoveAccounts(ctx, tc.groupID, tc.accounts)
-			if tc.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+			err := repo.DeleteAllMembers(ctx, tc.groupID, tc.ownerID)
+			require.NoError(t, err)
 
-				if len(tc.accounts) > 0 && tc.groupID > 0 {
-					for _, acc := range tc.accounts {
-						var exists bool
-						query := `
-							SELECT EXISTS (
-								SELECT 1 FROM groups_accounts
-								WHERE group_id = $1 AND account_id = $2
-							)
-						`
-						err := pgTestSuite.db.QueryRow(ctx, query, tc.groupID, acc.Entity.ID).Scan(&exists)
-						require.NoError(t, err)
-						require.False(t, exists)
-					}
-				}
+			var count int64
+			query := "SELECT count(account_id) from groups_accounts WHERE groups_accounts.group_id = $1"
+			pgTestSuite.db.QueryRow(ctx, query, tc.groupID).Scan(&count)
+
+			if tc.wouldDelete {
+				require.Zero(t, count)
+			} else {
+				require.NotZero(t, count)
 			}
 		})
 	}

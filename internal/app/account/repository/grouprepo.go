@@ -18,7 +18,7 @@ type GroupRepository interface {
 	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
 	Update(ctx context.Context, group entity.Group) error
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
-	RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
+	DeleteAllMembers(ctx context.Context, groupID, ownerID types.ID) error
 }
 
 type groupRepo struct {
@@ -192,25 +192,13 @@ func (repo groupRepo) AddAccounts(ctx context.Context, groupID types.ID, account
 	return nil
 }
 
-func (repo groupRepo) RemoveAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error {
-	var (
-		args   []any
-		params []string
-	)
+func (repo groupRepo) DeleteAllMembers(ctx context.Context, groupID, ownerID types.ID) error {
+	query := `
+	DELETE FROM groups_accounts ga
+	USING groups g
+	WHERE g.id = ga.group_id AND g.id = $1 AND g.owner_id = $2
+	`
 
-	args = append(args, groupID)
-
-	for i, account := range accounts {
-		args = append(args, account.Entity.ID)
-		params = append(params, fmt.Sprintf("$%d", i+2))
-	}
-
-	query := fmt.Sprintf(
-		`DELETE FROM groups_accounts 
-		 WHERE group_id = $1 AND account_id IN (%s)`,
-		strings.Join(params, ","),
-	)
-
-	_, err := repo.db.Exec(ctx, query, args...)
+	_, err := repo.db.Exec(ctx, query, groupID, ownerID)
 	return err
 }
