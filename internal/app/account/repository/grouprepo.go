@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
-	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/param"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -14,7 +14,7 @@ import (
 
 type GroupRepository interface {
 	Create(ctx context.Context, group *entity.Group) error
-	Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, int64, error)
+	Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int64, error)
 	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
 	Update(ctx context.Context, group entity.Group) error
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
@@ -41,7 +41,7 @@ func (repo groupRepo) Create(ctx context.Context, group *entity.Group) error {
 	return nil
 }
 
-func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([]entity.Group, int64, error) {
+func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int64, error) {
 	query := `
 	WITH data AS (
 		SELECT g.id, g.name, g.description,

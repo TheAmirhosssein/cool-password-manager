@@ -1,4 +1,4 @@
-package params
+package param
 
 import "github.com/TheAmirhosssein/cool-password-manage/internal/types"
 

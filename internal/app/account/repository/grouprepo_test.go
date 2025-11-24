@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
+	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/account/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
-	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/utils/base"
