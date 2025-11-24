@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
 	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/utils/base"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -122,6 +124,65 @@ func TestGroupUsecase_Read(t *testing.T) {
 					require.NotZero(t, g.Owner.Entity.ID)
 					require.NotEmpty(t, g.Owner.Username)
 					require.NotEmpty(t, g.Members)
+				}
+			}
+		})
+	}
+}
+
+func TestGroupUsecase_Update(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	usecase := setupGroupUsecase()
+
+	g := seed.GroupBlackHippy
+
+	testcases := []struct {
+		name  string
+		group entity.Group
+		err   error
+	}{
+		{
+			name: "success",
+			group: entity.Group{
+				Entity:      base.Entity{ID: g.ID},
+				Name:        "new group name",
+				Description: types.NullString{String: "something new", Valid: true},
+				Owner:       g.Owner,
+				Members:     []entity.Account{seed.AccountEarl, seed.AccountFrankOcean, seed.AccountKendrickLamar},
+			},
+		},
+		{
+			name: "different owner",
+			group: entity.Group{
+				Entity:      base.Entity{ID: g.ID},
+				Name:        "new group",
+				Description: types.NullString{String: "something new", Valid: true},
+				Owner:       seed.GroupBrockhampton.Owner,
+				Members:     []entity.Account{seed.AccountEarl, seed.AccountFrankOcean},
+			},
+			err: account.GroupOnlyTheOwnerCanEdit,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := usecase.Update(ctx, tc.group.Owner, tc.group)
+			if tc.err != nil {
+				require.EqualError(t, err, tc.err.Error())
+			} else {
+				require.NoError(t, err, tc.err)
+				groupRepo := repository.NewGroupRepository(pgTestSuite.db)
+				group, err := groupRepo.ReadOne(ctx, tc.group.ID, tc.group.Owner.Entity.ID)
+				require.NoError(t, err)
+				require.Equal(t, group.ID, tc.group.ID)
+				require.Equal(t, group.Name, tc.group.Name)
+				require.Equal(t, group.Description, tc.group.Description)
+				require.Equal(t, group.Owner.Entity.ID, tc.group.Owner.Entity.ID)
+				for i, member := range group.Members {
+					require.Equal(t, member.Entity.ID, tc.group.Members[i].Entity.ID)
 				}
 			}
 		})

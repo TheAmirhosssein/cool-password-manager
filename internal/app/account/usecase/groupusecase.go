@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"context"
+	"slices"
 
+	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/param"
@@ -39,4 +41,40 @@ func (u GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 
 func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int64, error) {
 	return u.groupRepo.Read(ctx, params)
+}
+
+func (u GroupUsecase) Update(ctx context.Context, editorAccount entity.Account, group entity.Group) error {
+	toBeUpdatedGroup, err := u.groupRepo.ReadOne(ctx, group.ID, editorAccount.Entity.ID)
+	if err != nil {
+		log.ErrorLogger.Error("error at getting group by id", "error", err.Error())
+		return errors.NewServerError()
+	}
+
+	if editorAccount.Entity.ID != toBeUpdatedGroup.Owner.Entity.ID {
+		return account.GroupOnlyTheOwnerCanEdit
+	}
+
+	err = u.groupRepo.Update(ctx, group)
+	if err != nil {
+		log.ErrorLogger.Error("error at updating group", "error", err.Error())
+		return errors.NewServerError()
+	}
+
+	if !slices.Contains(group.Members, group.Owner) {
+		group.Members = append(group.Members, entity.Account{Entity: group.Owner.Entity})
+	}
+
+	err = u.groupRepo.DeleteAllMembers(ctx, group.ID, group.Owner.Entity.ID)
+	if err != nil {
+		log.ErrorLogger.Error("error at deleting all the members of group", "error", err.Error())
+		return errors.NewServerError()
+	}
+
+	err = u.groupRepo.AddAccounts(ctx, group.ID, group.Members)
+	if err != nil {
+		log.ErrorLogger.Error("error at adding members to group", "error", err.Error())
+		return errors.NewServerError()
+	}
+
+	return nil
 }

@@ -115,13 +115,16 @@ func (repo groupRepo) Read(ctx context.Context, param params.ReadGroupParams) ([
 func (repo groupRepo) ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error) {
 	query := `
 	SELECT g.id, g.name, g.description,
-	       o.id, o.username, o.first_name, o.last_name, o.email,
-	       m.id, m.username, m.first_name, m.last_name, m.email
-	FROM groups g
-	JOIN accounts o ON o.id = g.owner_id
-	JOIN groups_accounts ga ON ga.group_id = g.id
-	JOIN accounts m ON m.id = ga.account_id
-	WHERE g.id = $1 AND ga.account_id = $2
+				o.id, o.username, o.first_name, o.last_name, o.email,
+				m.id, m.username, m.first_name, m.last_name, m.email
+		FROM groups g
+		JOIN accounts o ON o.id = g.owner_id
+		JOIN groups_accounts ga ON ga.group_id = g.id
+		JOIN accounts m ON m.id = ga.account_id
+	WHERE g.id = $1 AND g.id IN (
+		SELECT group_id FROM groups_accounts WHERE account_id = $2
+	)
+	ORDER BY g.id
 	`
 
 	rows, err := repo.db.Query(ctx, query, id, memberID)

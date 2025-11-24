@@ -5,6 +5,8 @@ import "github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 const (
 	CodeAuthInvalidAccount = 401_100
 
+	CodeGroupOnlyTheOwnerCanEdit = 403_100
+
 	CodeAuthTwoFactorDoesNotExist = 404_100
 
 	CodeAuthUsernameExist = 409_100
@@ -22,6 +24,9 @@ const (
 	MessageAuthEmailExist              = "an account with that email already exist"
 	MessageAuthTwoFactorDoesNotExist   = "two factor authentication does not exist"
 	MessageAuthInvalidVerificationCode = "the verification code is invalid"
+
+	// Group
+	MessageGroupOnlyTheOwnerCanEdit = "only the group owner can edit the group"
 )
 
 var (
@@ -32,4 +37,7 @@ var (
 	AuthInvalidPassword         = errors.NewError(MessageInvalidPassword, CodeAuthInvalidPassword)
 	AuthTwoFactorDoesNotExist   = errors.NewError(MessageAuthTwoFactorDoesNotExist, CodeAuthTwoFactorDoesNotExist)
 	AuthInvalidVerificationCode = errors.NewError(MessageAuthInvalidVerificationCode, CodeAuthInvalidVerificationCode)
+
+	// Group
+	GroupOnlyTheOwnerCanEdit = errors.NewError(MessageGroupOnlyTheOwnerCanEdit, CodeGroupOnlyTheOwnerCanEdit)
 )
