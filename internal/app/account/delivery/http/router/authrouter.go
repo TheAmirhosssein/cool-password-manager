@@ -27,4 +27,6 @@ func authRouter(
 	server.Any(http.PathTwoFactor, http.GuestOnly(), func(ctx *gin.Context) {
 		handler.TwoFactorHandler(ctx, authUsecase)
 	})
+
+	server.GET(http.PathLogout, handler.LogoutHandler)
 }
