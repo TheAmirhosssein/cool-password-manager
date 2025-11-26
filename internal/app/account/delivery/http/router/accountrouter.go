@@ -18,9 +18,10 @@ func AccountRouter(server *gin.Engine, conf *config.Config, db *pgxpool.Pool, re
 	// Create auth
 	accountRepo := repository.NewAccountRepository(db)
 	twoFactorRepo := repository.NewTwoFactorRepository(redis)
+	groupRepo := repository.NewGroupRepository(db)
 	authenticator := totp.NewAuthenticatorAdaptor(conf.Name)
 
 	// Register routers
 	authRouter(server, accountRepo, twoFactorRepo, authenticator, conf)
-	meRouter(server)
+	meRouter(server, groupRepo, accountRepo)
 }

@@ -132,7 +132,7 @@ func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username, password st
 	return twoFactor, nil
 }
 
-func (u *AuthUsecase) Login(ctx context.Context, twoFactorID types.CacheID, verificationCode string) (entity.Account, error) {
+func (u *AuthUsecase) ValidateTwoFactor(ctx context.Context, twoFactorID types.CacheID, verificationCode string) (entity.Account, error) {
 	twoFactorExist, err := u.twoFactorRepo.Exist(ctx, twoFactorID)
 	if err != nil {
 		log.ErrorLogger.Error("error at checking if two factor exist", "error", err.Error())

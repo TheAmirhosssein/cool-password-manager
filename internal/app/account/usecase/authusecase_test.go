@@ -194,7 +194,7 @@ func TestAuthUsecase_CreateTwoFactor(t *testing.T) {
 	}
 }
 
-func TestAuthUsecase_Login(t *testing.T) {
+func TestAuthUsecase_ValidateTwoFactor(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
@@ -247,7 +247,7 @@ func TestAuthUsecase_Login(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			acc, err := u.Login(ctx, tc.twoFactorID, tc.code)
+			acc, err := u.ValidateTwoFactor(ctx, tc.twoFactorID, tc.code)
 
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, err, tc.expectedErr)

@@ -43,10 +43,12 @@ func (r accountRepo) Create(ctx context.Context, account entity.Account) error {
 }
 
 func (r accountRepo) ReadByUsername(ctx context.Context, username string) (entity.Account, error) {
-	query := "SELECT username, email, secret, password FROM accounts WHERE username = $1"
+	query := "SELECT id, username, email, secret, password FROM accounts WHERE username = $1"
 
 	var account entity.Account
-	err := r.db.QueryRow(ctx, query, username).Scan(&account.Username, &account.Email, &account.Secret, &account.Password)
+	err := r.db.QueryRow(ctx, query, username).Scan(
+		&account.Entity.ID, &account.Username, &account.Email, &account.Secret, &account.Password,
+	)
 
 	if err != nil {
 		log.ErrorLogger.Error("getting account by username", "error", err.Error(), "username", username)
@@ -83,7 +85,7 @@ func (r accountRepo) Update(ctx context.Context, account entity.Account) error {
 }
 
 func (r accountRepo) ExistByUsername(ctx context.Context, username string) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM accounts WHERE username = $1)"
+	query := "SELECT EXISTS(SELECT 1 FROM accounts WHERE username = $1) FROM accounts"
 
 	var exist bool
 	err := r.db.QueryRow(ctx, query, username).Scan(&exist)

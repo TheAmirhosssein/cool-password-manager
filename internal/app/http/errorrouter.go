@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	internalErrorRoute = "/errors/server-error"
+	internalErrorRoute = "/errors/server-error/"
 )
 
 func ErrorServer(server *gin.Engine) {

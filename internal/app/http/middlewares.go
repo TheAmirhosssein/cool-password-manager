@@ -7,17 +7,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	AuthUserIDKey   = "user_id"
+	AuthUsernameKey = "username"
+)
+
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
-		username := session.Get("username")
+		username := session.Get(AuthUsernameKey)
+		userID := session.Get(AuthUserIDKey)
 
 		if username == nil {
 			c.Redirect(http.StatusFound, PathLogin)
 			return
 		}
 
-		c.Set("username", username)
+		c.Set(AuthUserIDKey, userID)
+		c.Set(AuthUsernameKey, username)
 
 		c.Next()
 	}
@@ -26,7 +33,7 @@ func AuthRequired() gin.HandlerFunc {
 func GuestOnly() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
-		username := session.Get("username")
+		username := session.Get(AuthUsernameKey)
 
 		if username != nil {
 			c.Redirect(http.StatusFound, PathMe)
