@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	AuthUserIDKey   = "user_id"
-	AuthUsernameKey = "username"
+	AuthUserIDKey      = "user_id"
+	AuthUsernameKey    = "username"
+	AuthTwoFactorIDKey = "twoFactorID"
 )
 
 func AuthRequired() gin.HandlerFunc {

@@ -51,7 +51,7 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		}
 
 		session := sessions.Default(ctx)
-		session.Set("twoFactorID", string(twoFactor.ID))
+		session.Set(localHttp.AuthTwoFactorIDKey, string(twoFactor.ID))
 
 		if err := session.Save(); err != nil {
 			log.ErrorLogger.Error("can not set two factor id into session", "error", err.Error(), "username", acc.Username)
@@ -92,7 +92,7 @@ func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		}
 
 		session := sessions.Default(ctx)
-		session.Set("twoFactorID", string(twoFactor.ID))
+		session.Set(localHttp.AuthTwoFactorIDKey, string(twoFactor.ID))
 
 		if err := session.Save(); err != nil {
 			localHttp.NewServerError(ctx)
@@ -121,7 +121,7 @@ func TwoFactorHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		}
 
 		session := sessions.Default(ctx)
-		twoFactorID, ok := session.Get("twoFactorID").(string)
+		twoFactorID, ok := session.Get(localHttp.AuthTwoFactorIDKey).(string)
 
 		if !ok {
 			localHttp.NewServerError(ctx)
