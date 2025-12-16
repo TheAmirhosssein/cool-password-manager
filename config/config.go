@@ -33,6 +33,8 @@ type (
 		TemplatePath      string `env-required:"true" yaml:"template_path" env:"TEMPLATE_PATH"`
 		TwoFactorDuration int    `env-required:"true" yaml:"two_factor_duration" env:"TWO_FACTOR_DURATION"`
 		SecretKey         string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
+		DefaultPage       int    `env-required:"true" yaml:"default_page" env:"DEFAULT_PAGE"`
+		DefaultPageSize   int    `env-required:"true" yaml:"default_page_size" env:"DEFAULT_PAGE_SIZE"`
 	}
 
 	HTTP struct {

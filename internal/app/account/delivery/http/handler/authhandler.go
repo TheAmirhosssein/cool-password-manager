@@ -135,7 +135,7 @@ func TwoFactorHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		}
 
 		session.Set(localHttp.AuthUsernameKey, account.Username)
-		session.Set(localHttp.AuthUserIDKey, int32(account.Entity.ID))
+		session.Set(localHttp.AuthUserIDKey, int64(account.Entity.ID))
 
 		if err := session.Save(); err != nil {
 			log.ErrorLogger.Error("can not set username and user id into session", "error", err.Error())

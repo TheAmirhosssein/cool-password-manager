@@ -23,5 +23,5 @@ func AccountRouter(server *gin.Engine, conf *config.Config, db *pgxpool.Pool, re
 
 	// Register routers
 	authRouter(server, accountRepo, twoFactorRepo, authenticator, conf)
-	meRouter(server, groupRepo, accountRepo)
+	meRouter(server, groupRepo, accountRepo, conf)
 }

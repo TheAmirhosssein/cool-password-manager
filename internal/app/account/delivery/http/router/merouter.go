@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/handler"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
@@ -8,10 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func meRouter(server *gin.Engine, gRepo repository.GroupRepository, aRepo repository.AccountRepository) {
+func meRouter(server *gin.Engine, gRepo repository.GroupRepository, aRepo repository.AccountRepository, conf *config.Config) {
 	server.Use(http.AuthRequired())
 	groupeUsecase := usecase.NewGroupUsecase(gRepo, aRepo)
 	server.GET(http.PathMe, func(ctx *gin.Context) {
-		handler.MeHandler(ctx, groupeUsecase)
+		handler.MeHandler(ctx, groupeUsecase, conf)
 	})
 }

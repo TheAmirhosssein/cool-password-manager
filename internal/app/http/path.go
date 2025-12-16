@@ -8,5 +8,5 @@ const (
 	PathLogout    = "/account/auth/logout/"
 
 	// Me
-	PathMe = "/account/me/me/"
+	PathMe = "/"
 )

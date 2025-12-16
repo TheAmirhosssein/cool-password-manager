@@ -4,6 +4,8 @@ app:
   issuer: "cool-password-manager"
   template_path: "/internal/app/templates/**/*.html"
   two_factor_duration: 20
+  default_page: 1
+  default_page_size: 10
 
 http:
   port: "8080"

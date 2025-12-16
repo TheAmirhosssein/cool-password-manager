@@ -24,6 +24,12 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
+		userID, ok := userID.(int64)
+		if !ok {
+			NewServerError(c)
+			return
+		}
+
 		c.Set(AuthUserIDKey, userID)
 		c.Set(AuthUsernameKey, username)
 
