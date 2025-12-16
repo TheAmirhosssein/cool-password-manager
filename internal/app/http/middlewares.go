@@ -13,6 +13,11 @@ const (
 	AuthTwoFactorIDKey = "twoFactorID"
 )
 
+const (
+	PageKeyParam     = "page"
+	PageSizeKeyParam = "page-size"
+)
+
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)

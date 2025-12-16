@@ -17,8 +17,8 @@ func MeHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *config.Conf
 	username := ctx.GetString("username")
 	templateName := "me.html"
 
-	page := convertors.ParseQueryParamToInt(ctx.Query("page"), conf.DefaultPage)
-	pageSize := convertors.ParseQueryParamToInt(ctx.Query("page-size"), conf.DefaultPageSize)
+	page := convertors.ParseQueryParamToInt(ctx.Query(localHttp.PageKeyParam), conf.DefaultPage)
+	pageSize := convertors.ParseQueryParamToInt(ctx.Query(localHttp.PageSizeKeyParam), conf.DefaultPageSize)
 	limit, offset := convertors.SimplePaginationToLimitOffset(page, pageSize)
 
 	groups, numRows, err := usecase.Read(ctx, param.ReadGroupParams{
