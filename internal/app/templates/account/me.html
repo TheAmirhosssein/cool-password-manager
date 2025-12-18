@@ -11,23 +11,23 @@
 
     <h2>Your Groups</h2>
 
-    {{ range .groups }}
+    {{ if .group.Name }}
     <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-        <h3>{{ .Name }}</h3>
+        <h3>{{ .group.Name }}</h3>
 
-        {{ if .Description.Valid }}
-        <p>{{ .Description.String }}</p>
+        {{ if .group.Description.Valid }}
+        <p>{{ .group.Description.String }}</p>
         {{ else }}
         <p><em>No description</em></p>
         {{ end }}
 
         <p>
-            <strong>Owner:</strong> {{ .Owner.FirstName }} {{ .Owner.LastName }}
+            <strong>Owner:</strong> {{ .group.Owner.FirstName }} {{ .group.Owner.LastName }}
         </p>
 
         <p><strong>Members:</strong></p>
         <ul>
-            {{ range .Members }}
+            {{ range .group.Members }}
             <li>{{ .FirstName }} {{ .LastName }} ({{ .Email }})</li>
             {{ else }}
             <li>No members</li>

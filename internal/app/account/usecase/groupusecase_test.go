@@ -130,6 +130,40 @@ func TestGroupUsecase_Read(t *testing.T) {
 	}
 }
 
+func TestGroupUsecase_ReadFirstGroup(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	usecase := setupGroupUsecase()
+
+	testcases := []struct {
+		name      string
+		accountID types.ID
+		lastGroup entity.Group
+		wantErr   bool
+	}{
+		{
+			name:      "successful",
+			accountID: seed.AccountEarl.Entity.ID,
+			lastGroup: seed.GroupOddFuture,
+			wantErr:   false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			group, err := usecase.ReadFirstGroup(ctx, tc.accountID)
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, group.Name, tc.lastGroup.Name)
+			}
+		})
+	}
+}
+
 func TestGroupUsecase_Update(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

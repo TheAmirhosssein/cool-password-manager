@@ -43,14 +43,9 @@ func (repo groupRepo) Create(ctx context.Context, group *entity.Group) error {
 
 func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int64, error) {
 	query := `
-	WITH data AS (
-		SELECT g.id, g.name, g.description,
-				o.id, o.username, o.first_name, o.last_name, o.email,
-				m.id, m.username, m.first_name, m.last_name, m.email
+	WITH paged_groups AS (
+		SELECT g.id, g.name, g.description, g.owner_id
 		FROM groups g
-		JOIN accounts o ON o.id = g.owner_id
-		JOIN groups_accounts ga ON ga.group_id = g.id
-		JOIN accounts m ON m.id = ga.account_id
 		WHERE g.id IN (
 			SELECT group_id FROM groups_accounts WHERE account_id = $1
 		)
@@ -58,13 +53,23 @@ func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]
 		LIMIT $2 OFFSET $3
 	),
 	rows_count AS (
-		SELECT COUNT(g.id) AS count
-		FROM groups g
+		SELECT COUNT(*) AS count FROM groups g
 		WHERE g.id IN (
 			SELECT group_id FROM groups_accounts WHERE account_id = $1
 		)
 	)
-	SELECT rows_count.count, data.* FROM data CROSS JOIN rows_count
+	SELECT
+    	rc.count, pg.id AS group_id, pg.name AS group_name, pg.description,
+		o.id AS owner_id, o.username AS owner_username, o.first_name AS owner_first_name, 
+		o.last_name AS owner_last_name, o.email AS owner_email,
+		m.id as member_id, m.username AS member_username, m.first_name AS member_first_name,
+		m.last_name AS member_last_name, m.email AS member_email
+	FROM paged_groups pg
+	JOIN accounts o ON o.id = pg.owner_id
+	JOIN groups_accounts ga ON ga.group_id = pg.id
+	JOIN accounts m ON m.id = ga.account_id
+	CROSS JOIN rows_count rc
+	ORDER BY pg.id;
 	`
 
 	rows, err := repo.db.Query(ctx, query, param.MemberID, param.Limit, param.Offset)

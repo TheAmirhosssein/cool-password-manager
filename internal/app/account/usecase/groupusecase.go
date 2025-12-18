@@ -8,6 +8,7 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	params "github.com/TheAmirhosssein/cool-password-manage/internal/app/account/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
 )
@@ -41,6 +42,21 @@ func (u GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 
 func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int64, error) {
 	return u.groupRepo.Read(ctx, params)
+}
+
+func (u GroupUsecase) ReadFirstGroup(ctx context.Context, memberID types.ID) (entity.Group, error) {
+	params := params.ReadGroupParams{MemberID: memberID, Limit: 1, Offset: 0}
+	groups, _, err := u.groupRepo.Read(ctx, params)
+	if err != nil {
+		log.ErrorLogger.Error("error at reading last group", "error", err.Error())
+		return entity.Group{}, errors.NewServerError()
+	}
+
+	if len(groups) == 0 {
+		return entity.Group{}, nil
+	}
+
+	return groups[0], nil
 }
 
 func (u GroupUsecase) Update(ctx context.Context, editorAccount entity.Account, group entity.Group) error {

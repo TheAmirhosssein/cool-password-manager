@@ -12,7 +12,8 @@ import (
 const (
 	idGroupBrockhampton types.ID = iota + 1
 	idGroupOddFuture
-	idGroupRadiohead
+	idGroupBlackHippy
+	idGroupWestCoast
 )
 
 var (
@@ -42,7 +43,7 @@ var (
 	}
 
 	GroupBlackHippy = entity.Group{
-		Entity:      base.Entity{ID: idGroupRadiohead},
+		Entity:      base.Entity{ID: idGroupBlackHippy},
 		Name:        "Black Hippy",
 		Description: types.NullString{String: "Black Hippy Band Members", Valid: true},
 		Owner:       AccountKendrickLamar,
@@ -53,6 +54,21 @@ var (
 			AccountAbSoul,
 		},
 	}
+
+	GroupWestCoast = entity.Group{
+		Entity:      base.Entity{ID: idGroupWestCoast},
+		Name:        "West Coast",
+		Description: types.NullString{String: "West Coast Rappers", Valid: true},
+		Owner:       AccountKendrickLamar,
+		Members: []entity.Account{
+			AccountKendrickLamar,
+			AccountJayRock,
+			AccountSchoolBoyQ,
+			AccountAbSoul,
+			AccountEarl,
+			AccountEarl,
+		},
+	}
 )
 
 func createGroupSeed(ctx context.Context, db *pgxpool.Pool) {
@@ -60,7 +76,8 @@ func createGroupSeed(ctx context.Context, db *pgxpool.Pool) {
 	INSERT INTO groups(name, description, owner_id)
 	VALUES ('Brockhampton', 'Brockhampton Band Members', 3),
 		('Odd Future', 'Odd Future Band Members', 5),
-		('Black Hippy', 'Black Hippy', 8);
+		('Black Hippy', 'Black Hippy', 8),
+		('West Coast', 'West Coast Rappers', 8);
 	`
 
 	_, err := db.Exec(ctx, gQuery)
@@ -72,7 +89,8 @@ func createGroupSeed(ctx context.Context, db *pgxpool.Pool) {
 	INSERT INTO groups_accounts(group_id, account_id)
 	VALUES (1, 2), (1, 3), (1, 4), -- Brockhampton
 		(2, 5), (2, 6), (2, 7), -- Odd Future
-		(3, 8), (3, 9), (3, 10), (3, 11); -- Black Hippy
+		(3, 8), (3, 9), (3, 10), (3, 11), -- Black Hippy
+		(4, 8), (4, 9), (4, 10), (4, 11), (4, 5), (4, 6); -- West Coast Rappers
 
 	`
 
