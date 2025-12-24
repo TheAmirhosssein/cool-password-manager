@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>My Groups</title>
+</head>
+
+<body>
+    <p>Welcome {{ .username }}</p>
+
+    <h2>Your Groups</h2>
+
+    {{ range .groups }}
+    <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+        <h3>{{ .Name }}</h3>
+
+        {{ if .Description.Valid }}
+        <p>{{ .Description.String }}</p>
+        {{ else }}
+        <p><em>No description</em></p>
+        {{ end }}
+
+        <p>
+            <strong>Owner:</strong> {{ .Owner.FirstName }} {{ .Owner.LastName }}
+        </p>
+
+        <p><strong>Members:</strong></p>
+        <ul>
+            {{ range .Members }}
+            <li>{{ .FirstName }} {{ .LastName }} ({{ .Email }})</li>
+            {{ else }}
+            <li>No members</li>
+            {{ end }}
+        </ul>
+    </div>
+    {{ else }}
+    <p>No groups found.</p>
+    {{ end }}
+
+    <!-- Pagination -->
+    {{ if gt .Pagination.TotalPages 1 }}
+    <div style="margin-top:20px;">
+        {{ if .Pagination.HasPrev }}
+        <a href="?{{ .Pagination.Query }}&page={{ .Pagination.PrevPage }}">« Previous</a>
+        {{ end }}
+
+        <span style="margin: 0 10px;">
+            Page {{ .Pagination.Page }} of {{ .Pagination.TotalPages }}
+        </span>
+
+        {{ if .Pagination.HasNext }}
+        <a href="?{{ .Pagination.Query }}&page={{ .Pagination.NextPage }}">Next »</a>
+        {{ end }}
+    </div>
+    {{ end }}
+
+</body>
+
+</html>

@@ -40,7 +40,7 @@ func (u GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 	return nil
 }
 
-func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int64, error) {
+func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int, error) {
 	return u.groupRepo.Read(ctx, params)
 }
 
