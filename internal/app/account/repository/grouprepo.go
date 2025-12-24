@@ -14,7 +14,7 @@ import (
 
 type GroupRepository interface {
 	Create(ctx context.Context, group *entity.Group) error
-	Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int64, error)
+	Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int, error)
 	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
 	Update(ctx context.Context, group entity.Group) error
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
@@ -41,7 +41,7 @@ func (repo groupRepo) Create(ctx context.Context, group *entity.Group) error {
 	return nil
 }
 
-func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int64, error) {
+func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int, error) {
 	query := `
 	WITH paged_groups AS (
 		SELECT g.id, g.name, g.description, g.owner_id
@@ -69,7 +69,7 @@ func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]
 	JOIN groups_accounts ga ON ga.group_id = pg.id
 	JOIN accounts m ON m.id = ga.account_id
 	CROSS JOIN rows_count rc
-	ORDER BY pg.id;
+	ORDER BY group_id, member_id ASC;
 	`
 
 	rows, err := repo.db.Query(ctx, query, param.MemberID, param.Limit, param.Offset)
@@ -78,8 +78,9 @@ func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]
 	}
 	defer rows.Close()
 
-	var count int64
+	var count int
 	groupMap := make(map[types.ID]*entity.Group)
+	groupOrder := make([]types.ID, 0)
 
 	for rows.Next() {
 		var (
@@ -103,15 +104,17 @@ func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]
 			g.Entity.ID = groupID
 			g.Owner = owner
 			g.Members = []entity.Account{member}
+
 			groupMap[groupID] = &g
+			groupOrder = append(groupOrder, groupID)
 		} else {
 			existing.Members = append(existing.Members, member)
 		}
 	}
 
-	groups := make([]entity.Group, 0, len(groupMap))
-	for _, g := range groupMap {
-		groups = append(groups, *g)
+	groups := make([]entity.Group, 0, len(groupOrder))
+	for _, id := range groupOrder {
+		groups = append(groups, *groupMap[id])
 	}
 
 	return groups, count, nil

@@ -76,7 +76,7 @@ func TestGroupRepository_Read(t *testing.T) {
 		name    string
 		param   params.ReadGroupParams
 		wantErr bool
-		count   int64
+		count   int
 		wantLen int
 	}{
 		{
