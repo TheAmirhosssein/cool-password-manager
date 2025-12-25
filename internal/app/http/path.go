@@ -11,5 +11,7 @@ const (
 	PathLogout    = "/account/auth/logout/"
 
 	// Group
-	PathGroupList = "/account/groups/"
+	PathGroupList         = "/account/groups/"
+	PathGroupEdit         = "/account/groups/edit/"
+	PathGroupSearchMember = "/account/groups/members/"
 )

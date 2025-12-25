@@ -22,7 +22,7 @@ func NewGroupUsecase(groupRepo repository.GroupRepository, accountRepo repositor
 	return GroupUsecase{groupRepo: groupRepo, accountRepo: accountRepo}
 }
 
-func (u GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
+func (u *GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 	err := u.groupRepo.Create(ctx, group)
 	if err != nil {
 		log.ErrorLogger.Error("error at creating group", "error", err.Error())
@@ -40,7 +40,7 @@ func (u GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 	return nil
 }
 
-func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int, error) {
+func (u *GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int, error) {
 	groups, numRows, err := u.groupRepo.Read(ctx, params)
 	if err != nil {
 		return nil, 0, errors.NewServerError()
@@ -49,7 +49,7 @@ func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) (
 	return groups, numRows, nil
 }
 
-func (u GroupUsecase) ReadFirstGroup(ctx context.Context, memberID types.ID) (entity.Group, error) {
+func (u *GroupUsecase) ReadFirstGroup(ctx context.Context, memberID types.ID) (entity.Group, error) {
 	params := params.ReadGroupParams{MemberID: memberID, Limit: 1, Offset: 0}
 	groups, _, err := u.groupRepo.Read(ctx, params)
 	if err != nil {
@@ -64,7 +64,7 @@ func (u GroupUsecase) ReadFirstGroup(ctx context.Context, memberID types.ID) (en
 	return groups[0], nil
 }
 
-func (u GroupUsecase) ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error) {
+func (u *GroupUsecase) ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error) {
 	group, err := u.groupRepo.ReadOne(ctx, id, memberID)
 	if err != nil {
 		return entity.Group{}, errors.NewServerError()
@@ -73,7 +73,7 @@ func (u GroupUsecase) ReadOne(ctx context.Context, id, memberID types.ID) (entit
 	return group, nil
 }
 
-func (u GroupUsecase) Update(ctx context.Context, editorAccount entity.Account, group entity.Group) error {
+func (u *GroupUsecase) Update(ctx context.Context, editorAccount entity.Account, group entity.Group) error {
 	toBeUpdatedGroup, err := u.groupRepo.ReadOne(ctx, group.ID, editorAccount.Entity.ID)
 	if err != nil {
 		log.ErrorLogger.Error("error at getting group by id", "error", err.Error())
@@ -107,4 +107,24 @@ func (u GroupUsecase) Update(ctx context.Context, editorAccount entity.Account, 
 	}
 
 	return nil
+}
+
+func (u *GroupUsecase) SearchMember(ctx context.Context, username string) (entity.Account, error) {
+	exist, err := u.accountRepo.ExistByUsername(ctx, username)
+	if err != nil {
+		log.ErrorLogger.Error("error at checking if the user with the username exist", "error", err.Error())
+		return entity.Account{}, errors.NewServerError()
+	}
+
+	if !exist {
+		return entity.Account{}, account.AccountUsernameDoesNotExist
+	}
+
+	account, err := u.accountRepo.ReadByUsername(ctx, username)
+	if err != nil {
+		log.ErrorLogger.Error("error at reading account by username", "error", err.Error())
+		return entity.Account{}, errors.NewServerError()
+	}
+
+	return account, nil
 }

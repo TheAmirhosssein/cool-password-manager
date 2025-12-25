@@ -12,6 +12,7 @@ import (
 func meRouter(server *gin.Engine, gRepo repository.GroupRepository, aRepo repository.AccountRepository, conf *config.Config) {
 	server.Use(http.AuthRequired())
 	groupeUsecase := usecase.NewGroupUsecase(gRepo, aRepo)
+
 	server.GET(http.PathMe, func(ctx *gin.Context) {
 		handler.MeHandler(ctx, groupeUsecase, conf)
 	})

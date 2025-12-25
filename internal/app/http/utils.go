@@ -26,6 +26,11 @@ func HandlerFormError(ctx *gin.Context, formError error, template string, data g
 
 }
 
+func HandleJSONError(ctx *gin.Context, customError errors.CustomError) {
+	ctx.JSON(errors.HttpCode(customError.Code), gin.H{"message": customError.Message})
+	ctx.Abort()
+}
+
 func NewServerError(c *gin.Context) {
 	c.Redirect(http.StatusFound, internalErrorRoute)
 	c.Abort()

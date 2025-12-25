@@ -3,11 +3,14 @@ package account
 import "github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 
 const (
+	CodeGroupInvalidGroupID = 400_100
+
 	CodeAuthInvalidAccount = 401_100
 
 	CodeGroupOnlyTheOwnerCanEdit = 403_100
 
-	CodeAuthTwoFactorDoesNotExist = 404_100
+	CodeAuthTwoFactorDoesNotExist   = 404_100
+	CodeAccountUsernameDoesNotExist = 404_101
 
 	CodeAuthUsernameExist = 409_100
 	CodeAuthEmailExist    = 409_101
@@ -27,6 +30,10 @@ const (
 
 	// Group
 	MessageGroupOnlyTheOwnerCanEdit = "only the group owner can edit the group"
+	MessageGroupInvalidGroupID      = "invalid group id"
+
+	// Account
+	MessageAccountUsernameDoesNotExist = "account with that username does not exist"
 )
 
 var (
@@ -40,4 +47,8 @@ var (
 
 	// Group
 	GroupOnlyTheOwnerCanEdit = errors.NewError(MessageGroupOnlyTheOwnerCanEdit, CodeGroupOnlyTheOwnerCanEdit)
+	GroupInvalidGroupID      = errors.NewError(MessageGroupInvalidGroupID, CodeGroupInvalidGroupID)
+
+	// Account
+	AccountUsernameDoesNotExist = errors.NewError(MessageAccountUsernameDoesNotExist, CodeAccountUsernameDoesNotExist)
 )
