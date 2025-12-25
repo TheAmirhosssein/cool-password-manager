@@ -41,7 +41,12 @@ func (u GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 }
 
 func (u GroupUsecase) Read(ctx context.Context, params params.ReadGroupParams) ([]entity.Group, int, error) {
-	return u.groupRepo.Read(ctx, params)
+	groups, numRows, err := u.groupRepo.Read(ctx, params)
+	if err != nil {
+		return nil, 0, errors.NewServerError()
+	}
+
+	return groups, numRows, nil
 }
 
 func (u GroupUsecase) ReadFirstGroup(ctx context.Context, memberID types.ID) (entity.Group, error) {
@@ -57,6 +62,15 @@ func (u GroupUsecase) ReadFirstGroup(ctx context.Context, memberID types.ID) (en
 	}
 
 	return groups[0], nil
+}
+
+func (u GroupUsecase) ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error) {
+	group, err := u.groupRepo.ReadOne(ctx, id, memberID)
+	if err != nil {
+		return entity.Group{}, errors.NewServerError()
+	}
+
+	return group, nil
 }
 
 func (u GroupUsecase) Update(ctx context.Context, editorAccount entity.Account, group entity.Group) error {
