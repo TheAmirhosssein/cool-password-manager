@@ -41,6 +41,7 @@ func GroupListHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 
 	ctx.HTML(http.StatusOK, templateName, gin.H{
 		"Username":   username,
+		"LogoutUrl":  localHttp.PathLogout,
 		"EditUrl":    localHttp.PathGroupEdit,
 		"Groups":     groups,
 		"Pagination": paginator.PaginationForTemplate(paginator.GetTotalPage(numRows, pageSize), page, ctx.Request.URL.Query()),
@@ -52,7 +53,12 @@ func GroupEditHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 	userID := types.ID(ctx.GetInt64(localHttp.AuthUserIDKey))
 	groupID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	editUrl := fmt.Sprint(localHttp.PathGroupEdit, groupID)
-	data := gin.H{"SearchUrl": localHttp.PathGroupSearchMember, "Action": editUrl}
+	data := gin.H{
+		"SearchUrl": localHttp.PathGroupSearchMember,
+		"Action":    editUrl,
+		"LogoutUrl": localHttp.PathLogout,
+		"Username":  ctx.GetString(localHttp.AuthUsernameKey),
+	}
 
 	if err != nil {
 		localHttp.HandleError(ctx, errors.Error2Custom(account.GroupInvalidGroupID), templateName, data)

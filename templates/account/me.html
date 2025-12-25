@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/theme.css" rel="stylesheet">
+
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">Cool Password Manager</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3">Welcome, {{ .Username }}</span>
+                <a class="btn btn-outline-light" href="{{ .LogoutUrl }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4">Your Groups</h2>
+
+        {{ if .Group.Name }}
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ .Group.Name }}</h5>
+
+                <p class="card-text">
+                    {{ if .Group.Description.Valid }}
+                    {{ .Group.Description.String }}
+                    {{ else }}
+                    <em>No description</em>
+                    {{ end }}
+                </p>
+
+                <p class="mb-2"><strong>Owner:</strong> {{ .Group.Owner.FirstName }} {{ .Group.Owner.LastName }}</p>
+
+                <p class="mb-1"><strong>Members:</strong></p>
+                <ul class="list-group list-group-flush mb-0">
+                    {{ range .Group.Members }}
+                    <li class="list-group-item">{{ .FirstName }} {{ .LastName }} ({{ .Email }})</li>
+                    {{ else }}
+                    <li class="list-group-item"><em>No members</em></li>
+                    {{ end }}
+                </ul>
+                <a href="{{ $.GroupListUrl }}" class="btn btn-outline-primary btn-sm w-100 mt-2">More</a>
+            </div>
+        </div>
+        {{ else }}
+        <div class="alert alert-warning" role="alert">
+            No groups found.
+        </div>
+        {{ end }}
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -31,6 +31,7 @@ type (
 		AESKey            string `env-required:"true" yaml:"aes_key" env:"AES_KEY"`
 		RootPath          string
 		TemplatePath      string `env-required:"true" yaml:"template_path" env:"TEMPLATE_PATH"`
+		StaticPath        string `env-required:"true" yaml:"static_path" env:"STATIC_PATH"`
 		TwoFactorDuration int    `env-required:"true" yaml:"two_factor_duration" env:"TWO_FACTOR_DURATION"`
 		SecretKey         string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
 		DefaultPage       int    `env-required:"true" yaml:"default_page" env:"DEFAULT_PAGE"`

@@ -32,6 +32,7 @@ func Run(ctx context.Context, conf *config.Config) error {
 	redisClient := redis.GetClient()
 
 	server.LoadHTMLGlob(conf.APP.RootPath + conf.APP.TemplatePath)
+	server.Static(conf.APP.StaticPath, conf.APP.RootPath+conf.APP.StaticPath)
 
 	router.AccountRouter(server, conf, db, redisClient)
 	localHttp.ErrorServer(server)

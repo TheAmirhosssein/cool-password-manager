@@ -1,0 +1,87 @@
+/* theme.css */
+
+
+/* Centered auth container card (for login & signup) */
+.auth-container {
+    max-width: 500px;
+    margin: 60px auto;
+    padding: 30px;
+    background-color: #1e3a8a;
+    /* Navy */
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    color: #f8fafc;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.auth-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Headings */
+.auth-container h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+/* Form labels and inputs */
+.auth-container label {
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.auth-container input {
+    margin-bottom: 1rem;
+}
+
+/* Buttons for login / signup */
+.btn-auth {
+    width: 100%;
+    background-color: #f8fafc;
+    color: #1e3a8a;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-auth:hover {
+    background-color: #e2e8f0;
+    color: #1e3a8a;
+}
+
+/* Error messages */
+.error-message {
+    color: #f87171;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+/* Prompt for switching pages (Sign in / Sign up) */
+.auth-prompt {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.auth-prompt span {
+    color: #cbd5e1;
+    margin-right: 0.25rem;
+}
+
+.auth-prompt a {
+    color: #f8fafc;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-prompt a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .auth-container {
+        margin: 40px 20px;
+        padding: 25px;
+    }
+}

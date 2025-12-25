@@ -23,6 +23,9 @@ func MeHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *config.Conf
 	}
 
 	ctx.HTML(http.StatusOK, templateName, gin.H{
-		"username": username, "logout_url": localHttp.PathLogout, "group": group,
+		"Username":     username,
+		"LogoutUrl":    localHttp.PathLogout,
+		"Group":        group,
+		"GroupListUrl": localHttp.PathGroupList,
 	})
 }
