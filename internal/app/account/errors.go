@@ -7,10 +7,12 @@ const (
 
 	CodeAuthInvalidAccount = 401_100
 
-	CodeGroupOnlyTheOwnerCanEdit = 403_100
+	CodeGroupOnlyTheOwnerCanEdit   = 403_100
+	CodeGroupOnlyTheOwnerCanDelete = 403_101
 
 	CodeAuthTwoFactorDoesNotExist   = 404_100
 	CodeAccountUsernameDoesNotExist = 404_101
+	CodeGroupDoesNotExist           = 404_102
 
 	CodeAuthUsernameExist = 409_100
 	CodeAuthEmailExist    = 409_101
@@ -29,8 +31,10 @@ const (
 	MessageAuthInvalidVerificationCode = "the verification code is invalid"
 
 	// Group
-	MessageGroupOnlyTheOwnerCanEdit = "only the group owner can edit the group"
-	MessageGroupInvalidGroupID      = "invalid group id"
+	MessageGroupOnlyTheOwnerCanEdit   = "only the group owner can edit the group"
+	MessageGroupOnlyTheOwnerCanDelete = "only the group owner can delete the group"
+	MessageGroupInvalidGroupID        = "invalid group id"
+	MessageGroupDoesNotExist          = "group does not exist"
 
 	// Account
 	MessageAccountUsernameDoesNotExist = "account with that username does not exist"
@@ -46,8 +50,10 @@ var (
 	AuthInvalidVerificationCode = errors.NewError(MessageAuthInvalidVerificationCode, CodeAuthInvalidVerificationCode)
 
 	// Group
-	GroupOnlyTheOwnerCanEdit = errors.NewError(MessageGroupOnlyTheOwnerCanEdit, CodeGroupOnlyTheOwnerCanEdit)
-	GroupInvalidGroupID      = errors.NewError(MessageGroupInvalidGroupID, CodeGroupInvalidGroupID)
+	GroupOnlyTheOwnerCanEdit   = errors.NewError(MessageGroupOnlyTheOwnerCanEdit, CodeGroupOnlyTheOwnerCanEdit)
+	GroupOnlyTheOwnerCanDelete = errors.NewError(MessageGroupOnlyTheOwnerCanDelete, CodeGroupOnlyTheOwnerCanDelete)
+	GroupInvalidGroupID        = errors.NewError(MessageGroupInvalidGroupID, CodeGroupInvalidGroupID)
+	GroupDoesNotExist          = errors.NewError(MessageGroupDoesNotExist, CodeGroupDoesNotExist)
 
 	// Account
 	AccountUsernameDoesNotExist = errors.NewError(MessageAccountUsernameDoesNotExist, CodeAccountUsernameDoesNotExist)

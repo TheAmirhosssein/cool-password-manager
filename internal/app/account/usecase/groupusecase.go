@@ -111,6 +111,30 @@ func (u *GroupUsecase) Update(ctx context.Context, editorAccount entity.Account,
 	return nil
 }
 
+func (u *GroupUsecase) Delete(ctx context.Context, id, ownerID types.ID) error {
+	group, err := u.ReadOne(ctx, id, ownerID)
+	if err != nil {
+		log.ErrorLogger.Error("error at reading one group", "error", err.Error())
+		return errors.NewServerError()
+	}
+
+	if !group.ID.Valid() {
+		return account.GroupDoesNotExist
+	}
+
+	if group.Owner.Entity.ID != ownerID {
+		return account.GroupOnlyTheOwnerCanDelete
+	}
+
+	err = u.groupRepo.Delete(ctx, id, ownerID)
+	if err != nil {
+		log.ErrorLogger.Error("error at deleting group", "error", err.Error())
+		return errors.NewServerError()
+	}
+
+	return nil
+}
+
 func (u *GroupUsecase) SearchMember(ctx context.Context, username string) (entity.Account, error) {
 	exist, err := u.accountRepo.ExistByUsername(ctx, username)
 	if err != nil {

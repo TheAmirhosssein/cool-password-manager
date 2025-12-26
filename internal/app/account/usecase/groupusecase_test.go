@@ -283,6 +283,53 @@ func TestGroupUsecase_Update(t *testing.T) {
 	}
 }
 
+func TestGroupUsecase_Delete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	usecase := setupGroupUsecase()
+
+	group := seed.GroupBrockhampton
+
+	testcases := []struct {
+		name    string
+		groupID types.ID
+		ownerID types.ID
+		err     error
+	}{
+		{
+			name:    "delete group name with different owner",
+			groupID: group.ID,
+			ownerID: seed.AccountKendrickLamar.Entity.ID,
+			err:     account.GroupDoesNotExist,
+		},
+		{
+			name:    "delete group name with member",
+			groupID: group.ID,
+			ownerID: group.Members[0].Entity.ID,
+			err:     account.GroupOnlyTheOwnerCanDelete,
+		},
+		{
+			name:    "delete successfully",
+			groupID: group.ID,
+			ownerID: group.Owner.Entity.ID,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := usecase.Delete(ctx, tc.groupID, tc.ownerID)
+
+			if tc.err == nil {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.err.Error())
+			}
+		})
+	}
+}
+
 func TestGroupRepository_ReadByUsername(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
