@@ -16,6 +16,7 @@ const (
 const (
 	PageKeyParam     = "page"
 	PageSizeKeyParam = "page-size"
+	SearchKeyParam   = "q"
 )
 
 func AuthRequired() gin.HandlerFunc {

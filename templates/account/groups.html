@@ -26,6 +26,21 @@
     <div class="container py-5">
         <h2 class="mb-4 text-center">Your Groups</h2>
 
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-2 gap-3">
+            <div class="d-flex gap-2 w-100 w-md-auto">
+                <!-- Search -->
+                <form method="GET" class="d-flex flex-grow-1">
+                    <input type="search" name="q" value="{{ .SearchQuery }}" class="form-control"
+                        placeholder="Search groups..." onchange="searchGroups(this.value)">
+                </form>
+
+                <!-- Create Button -->
+                <a href="{{ .CreateUrl }}" class="btn btn-success">
+                    + Create Group
+                </a>
+            </div>
+        </div>
+
         {{ range .Groups }}
         <div class="card card-navy mb-4 shadow-sm">
             <div class="card-body">
@@ -95,8 +110,22 @@
                 window.location.href = deletePath + id;
             }
         }
-    </script>
 
+        function searchGroups(value) {
+            const url = new URL(window.location.href);
+
+            if (value.trim() === "") {
+                url.searchParams.delete("q");
+            } else {
+                url.searchParams.set("q", value);
+            }
+
+            // reset page when searching
+            url.searchParams.delete("page");
+
+            window.location.href = url.toString();
+        }
+    </script>
 </body>
 
 </html>

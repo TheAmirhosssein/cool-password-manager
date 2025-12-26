@@ -27,11 +27,13 @@ func GroupListHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 	page := convertors.ParseQueryParamToInt(ctx.Query(localHttp.PageKeyParam), conf.DefaultPage)
 	pageSize := convertors.ParseQueryParamToInt(ctx.Query(localHttp.PageSizeKeyParam), conf.DefaultPageSize)
 	limit, offset := convertors.SimplePaginationToLimitOffset(page, pageSize)
+	searchQuery := ctx.Query(localHttp.SearchKeyParam)
 
 	groups, numRows, err := usecase.Read(ctx, param.ReadGroupParams{
-		MemberID: types.ID(ctx.GetInt64(localHttp.AuthUserIDKey)),
-		Limit:    limit,
-		Offset:   offset,
+		MemberID:    types.ID(ctx.GetInt64(localHttp.AuthUserIDKey)),
+		SearchQuery: types.NewNullString(searchQuery),
+		Limit:       limit,
+		Offset:      offset,
 	})
 
 	if err != nil {
@@ -40,11 +42,12 @@ func GroupListHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 	}
 
 	ctx.HTML(http.StatusOK, templateName, gin.H{
-		"Username":   username,
-		"LogoutUrl":  localHttp.PathLogout,
-		"EditUrl":    localHttp.PathGroupEdit,
-		"Groups":     groups,
-		"Pagination": paginator.PaginationForTemplate(paginator.GetTotalPage(numRows, pageSize), page, ctx.Request.URL.Query()),
+		"Username":    username,
+		"LogoutUrl":   localHttp.PathLogout,
+		"EditUrl":     localHttp.PathGroupEdit,
+		"Groups":      groups,
+		"Pagination":  paginator.PaginationForTemplate(paginator.GetTotalPage(numRows, pageSize), page, ctx.Request.URL.Query()),
+		"SearchQuery": searchQuery,
 	})
 }
 

@@ -91,6 +91,18 @@ func TestGroupRepository_Read(t *testing.T) {
 			wantLen: 1,
 		},
 		{
+			name: "owner has groups with members and search",
+			param: params.ReadGroupParams{
+				MemberID:    seed.AccountKendrickLamar.Entity.ID,
+				SearchQuery: types.NullString{String: seed.GroupBlackHippy.Name, Valid: true},
+				Limit:       10,
+				Offset:      0,
+			},
+			wantErr: false,
+			count:   1,
+			wantLen: 1,
+		},
+		{
 			name: "owner has no groups",
 			param: params.ReadGroupParams{
 				MemberID: -1,

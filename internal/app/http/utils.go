@@ -32,6 +32,6 @@ func HandleJSONError(ctx *gin.Context, customError errors.CustomError) {
 }
 
 func NewServerError(c *gin.Context) {
-	c.Redirect(http.StatusFound, internalErrorRoute)
+	c.HTML(http.StatusInternalServerError, "server_error.html", gin.H{})
 	c.Abort()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/param"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/utils/helper"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -42,13 +43,15 @@ func (repo groupRepo) Create(ctx context.Context, group *entity.Group) error {
 }
 
 func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int, error) {
-	query := `
+	searchQuery := helper.MakeSearchQuery(param.SearchQuery, []string{"g.name", "g.description"})
+
+	query := fmt.Sprintf(`
 	WITH paged_groups AS (
 		SELECT g.id, g.name, g.description, g.owner_id
 		FROM groups g
 		WHERE g.id IN (
 			SELECT group_id FROM groups_accounts WHERE account_id = $1
-		)
+		) %v
 		ORDER BY g.id
 		LIMIT $2 OFFSET $3
 	),
@@ -56,7 +59,7 @@ func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]
 		SELECT COUNT(*) AS count FROM groups g
 		WHERE g.id IN (
 			SELECT group_id FROM groups_accounts WHERE account_id = $1
-		)
+		) %v
 	)
 	SELECT
     	rc.count, pg.id AS group_id, pg.name AS group_name, pg.description,
@@ -70,7 +73,7 @@ func (repo groupRepo) Read(ctx context.Context, param param.ReadGroupParams) ([]
 	JOIN accounts m ON m.id = ga.account_id
 	CROSS JOIN rows_count rc
 	ORDER BY group_id, member_id ASC;
-	`
+	`, searchQuery, searchQuery)
 
 	rows, err := repo.db.Query(ctx, query, param.MemberID, param.Limit, param.Offset)
 	if err != nil {

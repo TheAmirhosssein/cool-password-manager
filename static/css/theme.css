@@ -1,4 +1,6 @@
-/* Base colors */
+/* ================================
+   Base colors
+================================ */
 :root {
     --color-bg: #0b132b;
     --color-card: #1c2541;
@@ -11,13 +13,17 @@
     --color-success: #2ecc71;
 }
 
-/* Body */
+/* ================================
+   Body
+================================ */
 body {
     background-color: var(--color-bg);
     color: var(--color-text);
 }
 
-/* Cards */
+/* ================================
+   Cards
+================================ */
 .card,
 .card-navy {
     background-color: var(--color-card);
@@ -25,7 +31,9 @@ body {
     color: var(--color-text);
 }
 
-/* Buttons */
+/* ================================
+   Buttons
+================================ */
 .btn-primary {
     background-color: var(--color-primary);
     border-color: var(--color-primary);
@@ -57,7 +65,19 @@ body {
     color: #fff;
 }
 
-/* Form inputs & selects */
+.btn-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: #fff;
+}
+
+.btn-success:hover {
+    filter: brightness(1.1);
+}
+
+/* ================================
+   Form inputs & selects
+================================ */
 .form-control,
 .form-select,
 textarea {
@@ -75,7 +95,36 @@ textarea:focus {
     box-shadow: 0 0 0 0.25rem rgba(58, 134, 255, 0.25);
 }
 
-/* Links */
+/* ================================
+   Placeholder text (FIX)
+================================ */
+/* === FORCE placeholder color for dark theme === */
+.form-control::placeholder,
+.form-select::placeholder,
+textarea::placeholder,
+input::placeholder {
+    color: var(--color-muted) !important;
+    opacity: 1 !important;
+}
+
+/* WebKit */
+.form-control::-webkit-input-placeholder {
+    color: var(--color-muted) !important;
+}
+
+/* Firefox */
+.form-control::-moz-placeholder {
+    color: var(--color-muted) !important;
+}
+
+/* Edge / IE */
+.form-control:-ms-input-placeholder {
+    color: var(--color-muted) !important;
+}
+
+/* ================================
+   Links
+================================ */
 a {
     color: var(--color-primary);
     text-decoration: none;
@@ -85,19 +134,25 @@ a:hover {
     color: var(--color-primary-hover);
 }
 
-/* Muted text */
+/* ================================
+   Muted text
+================================ */
 .text-muted-light {
     color: var(--color-muted) !important;
 }
 
-/* List group items */
+/* ================================
+   List group items
+================================ */
 .list-group-item {
     background-color: var(--color-card);
     color: var(--color-text);
     border-color: var(--color-border);
 }
 
-/* Pagination */
+/* ================================
+   Pagination
+================================ */
 .pagination .page-link {
     background-color: var(--color-card);
     color: var(--color-text);
@@ -116,7 +171,9 @@ a:hover {
     color: #fff;
 }
 
-/* Alerts */
+/* ================================
+   Alerts
+================================ */
 .alert-danger {
     background-color: var(--color-danger);
     color: #fff;
@@ -129,7 +186,9 @@ a:hover {
     border-color: var(--color-border);
 }
 
-/* Input group buttons */
+/* ================================
+   Input group buttons
+================================ */
 .input-group .btn {
     background-color: var(--color-primary);
     color: #fff;
@@ -142,7 +201,9 @@ a:hover {
     color: #fff;
 }
 
-/* Headings */
+/* ================================
+   Headings
+================================ */
 h1,
 h2,
 h3,
