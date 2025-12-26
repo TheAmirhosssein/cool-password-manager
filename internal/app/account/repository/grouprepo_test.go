@@ -251,6 +251,52 @@ func TestGroupRepository_Update(t *testing.T) {
 	}
 }
 
+func TestGroupRepository_Delete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	repo := repository.NewGroupRepository(pgTestSuite.db)
+	group := seed.GroupBrockhampton
+
+	testcases := []struct {
+		name        string
+		groupID     types.ID
+		ownerID     types.ID
+		wouldDelete bool
+	}{
+		{
+			name:        "delete group name with different owner",
+			groupID:     group.ID,
+			ownerID:     seed.AccountKendrickLamar.Entity.ID,
+			wouldDelete: false,
+		},
+		{
+			name:        "delete successfully",
+			groupID:     group.ID,
+			ownerID:     group.Owner.Entity.ID,
+			wouldDelete: true,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := repo.Delete(ctx, tc.groupID, tc.ownerID)
+			require.NoError(t, err)
+
+			query := `SELECT EXISTS (SELECT 1 FROM groups WHERE id = $1)`
+			var exist bool
+			err = pgTestSuite.db.QueryRow(ctx, query, tc.groupID).Scan(&exist)
+			require.NoError(t, err)
+			if tc.wouldDelete {
+				require.False(t, exist)
+			} else {
+				require.True(t, exist)
+			}
+		})
+	}
+}
+
 func TestGroupRepository_AddAccount(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

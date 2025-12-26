@@ -18,6 +18,7 @@ type GroupRepository interface {
 	Read(ctx context.Context, param param.ReadGroupParams) ([]entity.Group, int, error)
 	ReadOne(ctx context.Context, id, memberID types.ID) (entity.Group, error)
 	Update(ctx context.Context, group entity.Group) error
+	Delete(ctx context.Context, groupID, ownerID types.ID) error
 	AddAccounts(ctx context.Context, groupID types.ID, accounts []entity.Account) error
 	DeleteAllMembers(ctx context.Context, groupID, ownerID types.ID) error
 }
@@ -167,6 +168,18 @@ func (repo groupRepo) Update(ctx context.Context, group entity.Group) error {
 	_, err := repo.db.Exec(ctx, query, group.Name, group.Description, group.Entity.ID, group.Owner.Entity.ID)
 	if err != nil {
 		log.ErrorLogger.Error("error at updating group", "error", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo groupRepo) Delete(ctx context.Context, groupID, ownerID types.ID) error {
+	query := "DELETE FROM groups WHERE id = $1 AND owner_id = $2"
+
+	_, err := repo.db.Exec(ctx, query, groupID, ownerID)
+	if err != nil {
+		log.ErrorLogger.Error("error at deleting group", "error", err.Error())
 		return err
 	}
 
