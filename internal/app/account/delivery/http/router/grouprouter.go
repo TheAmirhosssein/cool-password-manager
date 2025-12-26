@@ -17,6 +17,12 @@ func groupRouter(server *gin.Engine, gRepo repository.GroupRepository, aRepo rep
 	server.GET(http.PathGroupList, func(ctx *gin.Context) {
 		handler.GroupListHandler(ctx, groupeUsecase, conf)
 	})
+	server.GET(http.PathGroupCreate, func(ctx *gin.Context) {
+		handler.GroupCreateHandler(ctx, groupeUsecase, conf)
+	})
+	server.POST(http.PathGroupCreate, func(ctx *gin.Context) {
+		handler.GroupCreateHandler(ctx, groupeUsecase, conf)
+	})
 	server.GET(fmt.Sprint(http.PathGroupEdit, ":id/"), func(ctx *gin.Context) {
 		handler.GroupEditHandler(ctx, groupeUsecase, conf)
 	})

@@ -48,17 +48,60 @@ func GroupListHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 		"Groups":      groups,
 		"Pagination":  paginator.PaginationForTemplate(paginator.GetTotalPage(numRows, pageSize), page, ctx.Request.URL.Query()),
 		"SearchQuery": searchQuery,
+		"CreateUrl":   localHttp.PathGroupCreate,
 	})
+}
+
+func GroupCreateHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *config.Config) {
+	templateName := "group_create.html"
+	userID := types.ID(ctx.GetInt64(localHttp.AuthUserIDKey))
+	data := gin.H{
+		"SearchUrl": localHttp.PathGroupSearchMember,
+		"Action":    localHttp.PathGroupCreate,
+		"LogoutUrl": localHttp.PathLogout,
+		"Username":  ctx.GetString(localHttp.AuthUsernameKey),
+	}
+
+	switch ctx.Request.Method {
+	case http.MethodGet:
+		ctx.HTML(http.StatusOK, templateName, data)
+
+	case http.MethodPost:
+		var form model.GroupCreate
+		if err := ctx.ShouldBind(&form); err != nil {
+			formErr := errors.NewError(err.Error(), http.StatusBadRequest)
+			localHttp.HandlerFormError(ctx, formErr, templateName, data)
+			return
+		}
+
+		group := entity.Group{
+			Name:        form.Name,
+			Description: types.NewNullString(form.Description),
+			Owner:       entity.Account{Entity: base.Entity{ID: userID}},
+		}
+
+		for _, memberID := range form.MembersID {
+			group.Members = append(group.Members, entity.Account{Entity: base.Entity{ID: memberID}})
+		}
+
+		err := usecase.Create(ctx, &group)
+		if err != nil {
+			localHttp.HandleError(ctx, errors.Error2Custom(err), templateName, data)
+			return
+		}
+
+		ctx.Redirect(http.StatusSeeOther, localHttp.PathGroupList)
+		return
+	}
 }
 
 func GroupEditHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *config.Config) {
 	templateName := "group_edit.html"
 	userID := types.ID(ctx.GetInt64(localHttp.AuthUserIDKey))
 	groupID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-	editUrl := fmt.Sprint(localHttp.PathGroupEdit, groupID)
 	data := gin.H{
 		"SearchUrl": localHttp.PathGroupSearchMember,
-		"Action":    editUrl,
+		"Action":    fmt.Sprint(localHttp.PathGroupEdit, groupID),
 		"LogoutUrl": localHttp.PathLogout,
 		"Username":  ctx.GetString(localHttp.AuthUsernameKey),
 	}
@@ -81,14 +124,15 @@ func GroupEditHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 	case http.MethodPost:
 		var form model.GroupUpdate
 		if err := ctx.ShouldBind(&form); err != nil {
-			ctx.HTML(http.StatusOK, templateName, data)
+			formErr := errors.NewError(err.Error(), http.StatusBadRequest)
+			localHttp.HandlerFormError(ctx, formErr, templateName, data)
 			return
 		}
 
 		group := entity.Group{
 			Entity:      base.Entity{ID: types.ID(groupID)},
 			Name:        form.Name,
-			Description: types.NullString{String: form.Description, Valid: form.Description != ""},
+			Description: types.NewNullString(form.Description),
 			Owner:       entity.Account{Entity: base.Entity{ID: userID}},
 		}
 
@@ -102,7 +146,7 @@ func GroupEditHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 			return
 		}
 
-		ctx.Redirect(http.StatusSeeOther, editUrl)
+		ctx.Redirect(http.StatusSeeOther, localHttp.PathGroupList)
 		return
 	}
 }
