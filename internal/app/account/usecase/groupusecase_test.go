@@ -39,6 +39,17 @@ func TestGroupUsecase_Create(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name: "success with owner in member (error handling)",
+			group: entity.Group{
+				Name: "John's Second Group",
+				Owner: entity.Account{
+					Entity: base.Entity{ID: johnDoe.Entity.ID},
+				},
+				Members: []entity.Account{{Entity: base.Entity{ID: johnDoe.Entity.ID}}},
+			},
+			expectedErr: nil,
+		},
+		{
 			name: "invalid owner id (does not exist)",
 			group: entity.Group{
 				Name: "Ghost Group",

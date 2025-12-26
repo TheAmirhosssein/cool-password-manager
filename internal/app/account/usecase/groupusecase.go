@@ -29,7 +29,9 @@ func (u *GroupUsecase) Create(ctx context.Context, group *entity.Group) error {
 		return errors.NewServerError()
 	}
 
-	group.Members = append(group.Members, entity.Account{Entity: group.Owner.Entity})
+	if !u.isOwnerInMembers(group.Owner, group.Members) {
+		group.Members = append(group.Members, entity.Account{Entity: group.Owner.Entity})
+	}
 
 	err = u.groupRepo.AddAccounts(ctx, group.ID, group.Members)
 	if err != nil {
@@ -127,4 +129,13 @@ func (u *GroupUsecase) SearchMember(ctx context.Context, username string) (entit
 	}
 
 	return account, nil
+}
+
+func (u *GroupUsecase) isOwnerInMembers(owner entity.Account, members []entity.Account) bool {
+	for _, member := range members {
+		if member.Entity.ID == owner.Entity.ID {
+			return true
+		}
+	}
+	return false
 }
