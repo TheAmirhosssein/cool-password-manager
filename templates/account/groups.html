@@ -68,7 +68,7 @@
 
                 {{ if eq .Owner.Username $.Username }}
                 <div class="d-flex gap-2">
-                    <a href="{{$.EditUrl}}{{ .ID }}" class="btn btn-outline-primary btn-sm">Edit</a>
+                    <a href="{{$.EditPath}}{{ .ID }}" class="btn btn-outline-primary btn-sm">Edit</a>
                     <button class="btn btn-outline-danger btn-sm"
                         onclick="deleteGroup({{ .ID }}, '{{ .Name }}', '{{ $.DeletePath }}')">Delete</button>
                 </div>

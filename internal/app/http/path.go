@@ -14,5 +14,6 @@ const (
 	PathGroupList         = "/account/groups/"
 	PathGroupCreate       = "/account/groups/create/"
 	PathGroupEdit         = "/account/groups/edit/"
+	PathGroupDelete       = "/account/groups/delete/"
 	PathGroupSearchMember = "/account/groups/members/"
 )

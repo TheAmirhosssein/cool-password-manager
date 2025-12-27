@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
-	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/delivery/http/handler/model"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/param"
@@ -44,7 +43,8 @@ func GroupListHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 	ctx.HTML(http.StatusOK, templateName, gin.H{
 		"Username":    username,
 		"LogoutUrl":   localHttp.PathLogout,
-		"EditUrl":     localHttp.PathGroupEdit,
+		"EditPath":    localHttp.PathGroupEdit,
+		"DeletePath":  localHttp.PathGroupDelete,
 		"Groups":      groups,
 		"Pagination":  paginator.PaginationForTemplate(paginator.GetTotalPage(numRows, pageSize), page, ctx.Request.URL.Query()),
 		"SearchQuery": searchQuery,
@@ -52,7 +52,7 @@ func GroupListHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 	})
 }
 
-func GroupCreateHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *config.Config) {
+func GroupCreateHandler(ctx *gin.Context, usecase usecase.GroupUsecase) {
 	templateName := "group_create.html"
 	userID := types.ID(ctx.GetInt64(localHttp.AuthUserIDKey))
 	data := gin.H{
@@ -95,20 +95,20 @@ func GroupCreateHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *co
 	}
 }
 
-func GroupEditHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *config.Config) {
+func GroupEditHandler(ctx *gin.Context, usecase usecase.GroupUsecase) {
 	templateName := "group_edit.html"
 	userID := types.ID(ctx.GetInt64(localHttp.AuthUserIDKey))
 	groupID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		localHttp.HandleNotFoundError(ctx)
+		return
+	}
+
 	data := gin.H{
 		"SearchUrl": localHttp.PathGroupSearchMember,
 		"Action":    fmt.Sprint(localHttp.PathGroupEdit, groupID),
 		"LogoutUrl": localHttp.PathLogout,
 		"Username":  ctx.GetString(localHttp.AuthUsernameKey),
-	}
-
-	if err != nil {
-		localHttp.HandleError(ctx, errors.Error2Custom(account.GroupInvalidGroupID), templateName, data)
-		return
 	}
 
 	switch ctx.Request.Method {
@@ -147,8 +147,24 @@ func GroupEditHandler(ctx *gin.Context, usecase usecase.GroupUsecase, conf *conf
 		}
 
 		ctx.Redirect(http.StatusSeeOther, localHttp.PathGroupList)
+	}
+}
+
+func GroupDeleteHandler(ctx *gin.Context, usecase usecase.GroupUsecase) {
+	userID := types.ID(ctx.GetInt64(localHttp.AuthUserIDKey))
+	groupID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		localHttp.HandleNotFoundError(ctx)
 		return
 	}
+
+	err = usecase.Delete(ctx, types.ID(groupID), userID)
+	if err != nil {
+		localHttp.HandleError(ctx, errors.Error2Custom(err), "general_error.html", gin.H{})
+		return
+	}
+
+	ctx.Redirect(http.StatusSeeOther, localHttp.PathGroupList)
 }
 
 func GroupSearchMember(ctx *gin.Context, usecase usecase.GroupUsecase) {
