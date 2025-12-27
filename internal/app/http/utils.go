@@ -10,6 +10,8 @@ import (
 func HandleError(ctx *gin.Context, customError errors.CustomError, template string, data gin.H) {
 	if errors.HttpCode(customError.Code) == http.StatusInternalServerError {
 		NewServerError(ctx)
+	} else if errors.HttpCode(customError.Code) == http.StatusNotFound {
+		HandleNotFoundError(ctx)
 	} else {
 		data["error"] = true
 		data["message"] = customError.Message
@@ -33,5 +35,10 @@ func HandleJSONError(ctx *gin.Context, customError errors.CustomError) {
 
 func NewServerError(c *gin.Context) {
 	c.HTML(http.StatusInternalServerError, "server_error.html", gin.H{})
+	c.Abort()
+}
+
+func HandleNotFoundError(c *gin.Context) {
+	c.HTML(http.StatusNotFound, "notfound.html", gin.H{})
 	c.Abort()
 }
