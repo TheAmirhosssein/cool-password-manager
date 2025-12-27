@@ -32,7 +32,7 @@ func groupRouter(server *gin.Engine, gRepo repository.GroupRepository, aRepo rep
 	server.GET(fmt.Sprint(http.PathGroupDelete, ":id/"), func(ctx *gin.Context) {
 		handler.GroupDeleteHandler(ctx, groupeUsecase)
 	})
-	server.GET(fmt.Sprint(http.PathGroupSearchMember, ":username/"), func(ctx *gin.Context) {
+	server.GET(fmt.Sprint(http.PathGroupSearchMember), func(ctx *gin.Context) {
 		handler.GroupSearchMember(ctx, groupeUsecase)
 	})
 }

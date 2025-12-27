@@ -168,12 +168,14 @@ func GroupDeleteHandler(ctx *gin.Context, usecase usecase.GroupUsecase) {
 }
 
 func GroupSearchMember(ctx *gin.Context, usecase usecase.GroupUsecase) {
-	username := ctx.Param("username")
+	username := ctx.Query("username")
 	account, err := usecase.SearchMember(ctx, username)
 	if err != nil {
 		localHttp.HandleJSONError(ctx, errors.Error2Custom(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"id": account.Entity.ID, "username": account.Username})
+	option := fmt.Sprintf(`<option value="%d" selected>%s</option>`, account.Entity.ID, account.Username)
+	ctx.Header("Content-Type", "text/html; charset=utf-8")
+	ctx.String(http.StatusOK, option)
 }

@@ -11,6 +11,7 @@
 
     <!-- Your theme -->
     <link href="/static/css/theme.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
 
 </head>
@@ -50,17 +51,21 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Members</label>
-                                <select id="members" name="members[]" class="form-select" multiple size="6">
+                                <select id="members" name="members[]" class="form-select" multiple size="6"
+                                    hx-on="htmx:afterSwap:checkDuplicate(event)">
                                     {{ range .Group.Members }}
                                     <option value="{{ .Entity.ID }}" selected>{{ .Username }}</option>
                                     {{ end }}
                                 </select>
 
                                 <div class="input-group mt-2">
-                                    <input type="text" id="memberUsernameInput" class="form-control"
-                                        placeholder="Enter username...">
-                                    <button type="button" id="memberSearchBtn" class="btn btn-primary">Search &
-                                        Add</button>
+                                    <input type="text" id="memberUsernameInput" name="username" class="form-control"
+                                        placeholder="Enter username..." hx-get="{{.SearchUrl}}" hx-target="#members"
+                                        hx-swap="beforeend" hx-trigger="keyup.enter, click from:#memberSearchBtn"
+                                        hx-on="htmx:responseError:handleError(event)">
+                                    <button type="button" class="btn btn-primary" id="memberSearchBtn">
+                                        Search & Add
+                                    </button>
                                 </div>
 
                                 <div class="form-text text-light">
@@ -87,49 +92,8 @@
         </div>
     </div>
 
-    <script>
-        const usernameInput = document.getElementById("memberUsernameInput");
-        const searchBtn = document.getElementById("memberSearchBtn");
-        const membersSelect = document.getElementById("members");
-        const errorDiv = document.getElementById("memberError");
+    <script src="/static/js/htmx.js"></script>
 
-        searchBtn.addEventListener("click", () => {
-            const username = usernameInput.value.trim();
-            errorDiv.textContent = "";
-
-            if (!username) {
-                errorDiv.textContent = "Please enter a username.";
-                return;
-            }
-
-            const exists = Array.from(membersSelect.options)
-                .some(option => option.text.toLowerCase() === username.toLowerCase());
-
-            if (exists) {
-                errorDiv.textContent = "User is already added.";
-                return;
-            }
-
-            fetch(`{{ .SearchUrl }}${encodeURIComponent(username)}/`)
-                .then(res => {
-                    if (!res.ok) throw new Error("User not found");
-                    return res.json();
-                })
-                .then(user => {
-                    if (!Array.from(membersSelect.options).some(o => o.value === user.id.toString())) {
-                        const option = document.createElement("option");
-                        option.value = user.id;
-                        option.text = user.username;
-                        option.selected = true;
-                        membersSelect.appendChild(option);
-                    }
-                    usernameInput.value = "";
-                })
-                .catch(err => {
-                    errorDiv.textContent = "Username not found.";
-                });
-        });
-    </script>
 
 </body>
 
