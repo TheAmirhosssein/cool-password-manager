@@ -207,7 +207,7 @@ func TestAuthUsecase_ValidateTwoFactor(t *testing.T) {
 	// decrypt JohnDoe’s secret so we can generate a valid TOTP code
 	key, err := config.GetTestConfig().GetAESSecretKey()
 	require.NoError(t, err)
-	secret, err := encrypt.DecryptAESSecret(key, johnDoe.Secret)
+	secret, err := encrypt.DecryptAESSecret(key, johnDoe.TOTPSecret)
 	require.NoError(t, err)
 
 	validCode, err := googleTotp.GenerateCode(secret, time.Now())
@@ -256,7 +256,7 @@ func TestAuthUsecase_ValidateTwoFactor(t *testing.T) {
 				require.NoError(t, err)
 				require.True(t, tc.expectAcc)
 				require.Equal(t, johnDoe.Username, acc.Username)
-				require.NotEmpty(t, acc.Secret)
+				require.NotEmpty(t, acc.TOTPSecret)
 			}
 		})
 	}

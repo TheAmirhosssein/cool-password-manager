@@ -80,7 +80,7 @@ func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Auth
 		return totp.Authenticator{}, errors.NewServerError()
 	}
 
-	acc.Secret = secret
+	acc.TOTPSecret = []byte(secret)
 	acc.Password = password
 	err = u.accountRepo.Create(ctx, acc)
 	if err != nil {
@@ -161,7 +161,7 @@ func (u *AuthUsecase) ValidateTwoFactor(ctx context.Context, twoFactorID types.C
 		return entity.Account{}, errors.NewServerError()
 	}
 
-	secret, err := encrypt.DecryptAESSecret(key, acc.Secret)
+	secret, err := encrypt.DecryptAESSecret(key, acc.TOTPSecret)
 	if err != nil {
 		log.ErrorLogger.Error("error at decrypting secret", "error", err.Error(), "username", acc.Username)
 		return entity.Account{}, errors.NewServerError()

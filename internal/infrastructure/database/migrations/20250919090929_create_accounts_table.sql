@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS accounts(
     password TEXT NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL, 
-    secret TEXT NOT NULL,
+    -- auth_verifier BYTEA NOT NULL,
+    -- encrypted_vault_key BYTEA NOT NULL,
+    -- salt BYTEA NOT NULL,
+    totp_secret BYTEA NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

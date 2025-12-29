@@ -367,7 +367,7 @@ func TestGroupRepository_ReadByUsername(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expect.Username, account.Username)
 				require.Equal(t, tc.expect.Email, account.Email)
-				require.Equal(t, tc.expect.Secret, account.Secret)
+				require.Equal(t, tc.expect.TOTPSecret, account.TOTPSecret)
 			}
 		})
 	}

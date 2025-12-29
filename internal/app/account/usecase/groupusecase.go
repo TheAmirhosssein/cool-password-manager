@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"slices"
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
@@ -92,7 +91,7 @@ func (u *GroupUsecase) Update(ctx context.Context, editorAccount entity.Account,
 		return errors.NewServerError()
 	}
 
-	if !slices.Contains(group.Members, group.Owner) {
+	if !u.isOwnerInMembers(group.Owner, group.Members) {
 		group.Members = append(group.Members, entity.Account{Entity: group.Owner.Entity})
 	}
 

@@ -29,12 +29,7 @@ func EncryptAESSecret(key []byte, secret string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func DecryptAESSecret(key []byte, encrypted string) (string, error) {
-	data, err := base64.StdEncoding.DecodeString(encrypted)
-	if err != nil {
-		return "", err
-	}
-
+func DecryptAESSecret(key []byte, encrypted []byte) (string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
@@ -45,12 +40,12 @@ func DecryptAESSecret(key []byte, encrypted string) (string, error) {
 		return "", err
 	}
 
-	if len(data) < gcm.NonceSize() {
+	if len(encrypted) < gcm.NonceSize() {
 		return "", errors.New("ciphertext too short")
 	}
 
-	nonce := data[:gcm.NonceSize()]
-	ciphertext := data[gcm.NonceSize():]
+	nonce := encrypted[:gcm.NonceSize()]
+	ciphertext := encrypted[gcm.NonceSize():]
 
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {

@@ -68,36 +68,36 @@ func TestAccountRepository_Create(t *testing.T) {
 		{
 			name: "create new account",
 			account: entity.Account{
-				Username:  "new_user",
-				Password:  "secure_password",
-				Email:     "new_user@example.com",
-				FirstName: "New",
-				LastName:  "User",
-				Secret:    "new_secret",
+				Username:   "new_user",
+				Password:   "secure_password",
+				Email:      "new_user@example.com",
+				FirstName:  "New",
+				LastName:   "User",
+				TOTPSecret: []byte("new_secret"),
 			},
 			wantErr: false,
 		},
 		{
 			name: "duplicate username",
 			account: entity.Account{
-				Username:  seed.AccountJohnDoe.Username,
-				Password:  "somepass",
-				Email:     "duplicate@example.com",
-				FirstName: "Dup",
-				LastName:  "User",
-				Secret:    "new_secret",
+				Username:   seed.AccountJohnDoe.Username,
+				Password:   "somepass",
+				Email:      "duplicate@example.com",
+				FirstName:  "Dup",
+				LastName:   "User",
+				TOTPSecret: []byte("new_secret"),
 			},
 			wantErr: true,
 		},
 		{
 			name: "duplicate email",
 			account: entity.Account{
-				Username:  "another_user",
-				Password:  "somepass",
-				Email:     seed.AccountJohnDoe.Email,
-				FirstName: "Another",
-				LastName:  "User",
-				Secret:    "new_secret",
+				Username:   "another_user",
+				Password:   "somepass",
+				Email:      seed.AccountJohnDoe.Email,
+				FirstName:  "Another",
+				LastName:   "User",
+				TOTPSecret: []byte("new_secret"),
 			},
 			wantErr: true,
 		},
@@ -159,7 +159,7 @@ func TestAccountRepository_ReadByUsername(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expect.Username, account.Username)
 				require.Equal(t, tc.expect.Email, account.Email)
-				require.Equal(t, tc.expect.Secret, account.Secret)
+				require.Equal(t, tc.expect.TOTPSecret, account.TOTPSecret)
 			}
 		})
 	}
@@ -202,7 +202,7 @@ func TestAccountRepository_ReadByID(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expect.Username, account.Username)
 				require.Equal(t, tc.expect.Email, account.Email)
-				require.Equal(t, tc.expect.Secret, account.Secret)
+				require.Equal(t, tc.expect.TOTPSecret, account.TOTPSecret)
 			}
 		})
 	}
@@ -214,7 +214,7 @@ func TestAccountRepository_Update(t *testing.T) {
 	repo := repository.NewAccountRepository(pgTestSuite.db)
 
 	account := seed.AccountJohnDoe
-	account.Secret = "something else"
+	account.TOTPSecret = []byte("something else")
 
 	testcases := []struct {
 		name    string
@@ -235,7 +235,7 @@ func TestAccountRepository_Update(t *testing.T) {
 			require.NoError(t, err)
 			account, err = repo.ReadByUsername(ctx, tc.account.Username)
 			require.NoError(t, err)
-			require.Equal(t, account.Secret, tc.account.Secret)
+			require.Equal(t, account.TOTPSecret, tc.account.TOTPSecret)
 		})
 	}
 }
