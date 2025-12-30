@@ -35,7 +35,6 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 			Email:     form.Email,
 			FirstName: form.FirstName,
 			LastName:  form.LastName,
-			Password:  form.Password,
 		}
 
 		authenticator, err := usecase.SignUp(ctx, acc)
@@ -44,7 +43,7 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 			return
 		}
 
-		twoFactor, err := usecase.CreateTwoFactor(ctx, acc.Username, acc.Password)
+		twoFactor, err := usecase.CreateTwoFactor(ctx, acc.Username)
 		if err != nil {
 			localHttp.HandleError(ctx, errors.Error2Custom(err), template, data)
 			return
@@ -84,7 +83,7 @@ func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 			return
 		}
 
-		twoFactor, err := usecase.CreateTwoFactor(ctx, form.Username, form.Password)
+		twoFactor, err := usecase.CreateTwoFactor(ctx, form.Username)
 		if err != nil {
 			log.ErrorLogger.Error("can not set two factor id into session", "error", err.Error(), "username", twoFactor.Username)
 			localHttp.HandleError(ctx, errors.Error2Custom(err), templateName, data)

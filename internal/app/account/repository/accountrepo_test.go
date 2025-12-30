@@ -69,7 +69,6 @@ func TestAccountRepository_Create(t *testing.T) {
 			name: "create new account",
 			account: entity.Account{
 				Username:   "new_user",
-				Password:   "secure_password",
 				Email:      "new_user@example.com",
 				FirstName:  "New",
 				LastName:   "User",
@@ -81,7 +80,6 @@ func TestAccountRepository_Create(t *testing.T) {
 			name: "duplicate username",
 			account: entity.Account{
 				Username:   seed.AccountJohnDoe.Username,
-				Password:   "somepass",
 				Email:      "duplicate@example.com",
 				FirstName:  "Dup",
 				LastName:   "User",
@@ -93,7 +91,6 @@ func TestAccountRepository_Create(t *testing.T) {
 			name: "duplicate email",
 			account: entity.Account{
 				Username:   "another_user",
-				Password:   "somepass",
 				Email:      seed.AccountJohnDoe.Email,
 				FirstName:  "Another",
 				LastName:   "User",

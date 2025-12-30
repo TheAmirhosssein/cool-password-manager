@@ -15,7 +15,6 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/encrypt"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
-	"github.com/TheAmirhosssein/cool-password-manage/pkg/validation"
 )
 
 type AuthUsecase struct {
@@ -51,10 +50,10 @@ func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Auth
 		return totp.Authenticator{}, account.AuthEmailExist
 	}
 
-	validPassword := validation.IsValidPassword(acc.Password)
-	if !validPassword {
-		return totp.Authenticator{}, account.AuthInvalidPassword
-	}
+	// validPassword := validation.IsValidPassword(acc.Password)
+	// if !validPassword {
+	// 	return totp.Authenticator{}, account.AuthInvalidPassword
+	// }
 
 	authenticator, err := u.authenticator.GenerateQRCode(acc.Username)
 	if err != nil {
@@ -74,14 +73,14 @@ func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Auth
 		return totp.Authenticator{}, errors.NewServerError()
 	}
 
-	password, err := encrypt.HashPassword(acc.Password)
-	if err != nil {
-		log.ErrorLogger.Error("error at hashing password", "error", err.Error(), "username", acc.Username)
-		return totp.Authenticator{}, errors.NewServerError()
-	}
+	// password, err := encrypt.HashPassword(acc.Password)
+	// if err != nil {
+	// 	log.ErrorLogger.Error("error at hashing password", "error", err.Error(), "username", acc.Username)
+	// 	return totp.Authenticator{}, errors.NewServerError()
+	// }
 
 	acc.TOTPSecret = []byte(secret)
-	acc.Password = password
+	// acc.Password = password
 	err = u.accountRepo.Create(ctx, acc)
 	if err != nil {
 		log.ErrorLogger.Error("error at creating account", "error", err.Error(), "username", acc.Username)
@@ -91,7 +90,7 @@ func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Auth
 	return authenticator, nil
 }
 
-func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username, password string) (entity.TwoFactor, error) {
+func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username string) (entity.TwoFactor, error) {
 	existence, err := u.accountRepo.ExistByUsername(ctx, username)
 	if err != nil {
 		log.ErrorLogger.Error("error checking user existence by username", "error", err.Error(), "username", username)
@@ -102,16 +101,16 @@ func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username, password st
 		return entity.TwoFactor{}, account.AuthInvalidAccount
 	}
 
-	acc, err := u.accountRepo.ReadByUsername(ctx, username)
-	if err != nil {
-		log.ErrorLogger.Error("error getting account by username", "error", err.Error(), "username", username)
-		return entity.TwoFactor{}, errors.NewServerError()
-	}
+	// acc, err := u.accountRepo.ReadByUsername(ctx, username)
+	// if err != nil {
+	// 	log.ErrorLogger.Error("error getting account by username", "error", err.Error(), "username", username)
+	// 	return entity.TwoFactor{}, errors.NewServerError()
+	// }
 
-	correctPassword := encrypt.CheckPasswordHash(password, acc.Password)
-	if !correctPassword {
-		return entity.TwoFactor{}, account.AuthInvalidAccount
-	}
+	// correctPassword := encrypt.CheckPasswordHash(password, acc.Password)
+	// if !correctPassword {
+	// 	return entity.TwoFactor{}, account.AuthInvalidAccount
+	// }
 
 	twoFactorID, err := generateTwoFactorID()
 	if err != nil {

@@ -77,7 +77,6 @@ func TestAuthUsecase_SignUp(t *testing.T) {
 			name: "success signup",
 			account: entity.Account{
 				Username:  "new_user",
-				Password:  "Pas!sword@123",
 				Email:     "new_user@example.com",
 				FirstName: "New",
 				LastName:  "User",
@@ -88,7 +87,6 @@ func TestAuthUsecase_SignUp(t *testing.T) {
 			name: "username already exists",
 			account: entity.Account{
 				Username:  johnDoe.Username, // already seeded
-				Password:  "somepass",
 				Email:     "unique_email@example.com",
 				FirstName: "Dup",
 				LastName:  "User",
@@ -99,7 +97,6 @@ func TestAuthUsecase_SignUp(t *testing.T) {
 			name: "email already exists",
 			account: entity.Account{
 				Username:  "unique_username",
-				Password:  "somepass",
 				Email:     johnDoe.Email, // already seeded
 				FirstName: "Dup",
 				LastName:  "User",
@@ -110,7 +107,6 @@ func TestAuthUsecase_SignUp(t *testing.T) {
 			name: "invalid password",
 			account: entity.Account{
 				Username:  "new_user",
-				Password:  "123",
 				Email:     "new_user@example.com",
 				FirstName: "New",
 				LastName:  "User",
@@ -178,7 +174,7 @@ func TestAuthUsecase_CreateTwoFactor(t *testing.T) {
 			t.Parallel()
 
 			u := setupAuthUsecase()
-			tf, err := u.CreateTwoFactor(ctx, tc.username, tc.password)
+			tf, err := u.CreateTwoFactor(ctx, tc.username)
 
 			// Assertions
 			if tc.expectedErr != nil {

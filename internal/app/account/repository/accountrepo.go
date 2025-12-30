@@ -28,10 +28,10 @@ func NewAccountRepository(db *pgxpool.Pool) AccountRepository {
 }
 
 func (r accountRepo) Create(ctx context.Context, account entity.Account) error {
-	query := "INSERT INTO accounts (username, password, email, first_name, last_name, totp_secret) VALUES ($1, $2, $3, $4, $5, $6)"
+	query := "INSERT INTO accounts (username, email, first_name, last_name, totp_secret) VALUES ($1, $2, $3, $4, $5)"
 
 	_, err := r.db.Exec(
-		ctx, query, account.Username, account.Password, account.Email, account.FirstName, account.LastName, account.TOTPSecret,
+		ctx, query, account.Username, account.Email, account.FirstName, account.LastName, account.TOTPSecret,
 	)
 
 	if err != nil {
@@ -43,11 +43,11 @@ func (r accountRepo) Create(ctx context.Context, account entity.Account) error {
 }
 
 func (r accountRepo) ReadByUsername(ctx context.Context, username string) (entity.Account, error) {
-	query := "SELECT id, username, email, totp_secret, password FROM accounts WHERE username = $1"
+	query := "SELECT id, username, email, totp_secret FROM accounts WHERE username = $1"
 
 	var account entity.Account
 	err := r.db.QueryRow(ctx, query, username).Scan(
-		&account.Entity.ID, &account.Username, &account.Email, &account.TOTPSecret, &account.Password,
+		&account.Entity.ID, &account.Username, &account.Email, &account.TOTPSecret,
 	)
 
 	if err != nil {
@@ -59,10 +59,10 @@ func (r accountRepo) ReadByUsername(ctx context.Context, username string) (entit
 }
 
 func (r accountRepo) ReadByID(ctx context.Context, id types.ID) (entity.Account, error) {
-	query := "SELECT username, email, totp_secret, password FROM accounts WHERE id = $1"
+	query := "SELECT username, email, totp_secret FROM accounts WHERE id = $1"
 
 	var account entity.Account
-	err := r.db.QueryRow(ctx, query, id).Scan(&account.Username, &account.Email, &account.TOTPSecret, &account.Password)
+	err := r.db.QueryRow(ctx, query, id).Scan(&account.Username, &account.Email, &account.TOTPSecret)
 
 	if err != nil {
 		log.ErrorLogger.Error("getting account by id", "error", err.Error(), "id", id)

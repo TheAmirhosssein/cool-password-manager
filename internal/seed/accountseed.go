@@ -33,7 +33,6 @@ var (
 		Email:      "j.doe@gmail.com",
 		FirstName:  "John",
 		LastName:   "Doe",
-		Password:   "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 		TOTPSecret: []byte("UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE"),
 	}
 
@@ -43,7 +42,6 @@ var (
 		Email:     "m.champion@gmail.com",
 		FirstName: "Matt",
 		LastName:  "Champion",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountKevinAbstract = entity.Account{
@@ -52,7 +50,6 @@ var (
 		Email:     "k.abstract@gmail.com",
 		FirstName: "Kevin",
 		LastName:  "Abstract",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountJoba = entity.Account{
@@ -61,7 +58,6 @@ var (
 		Email:     "d.joba@gmail.com",
 		FirstName: "Joba (Russel)",
 		LastName:  "Boring",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountTyler = entity.Account{
@@ -70,7 +66,6 @@ var (
 		Email:     "tyler@gmail.com",
 		FirstName: "Tyler",
 		LastName:  "The Creator",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountEarl = entity.Account{
@@ -79,7 +74,6 @@ var (
 		Email:     "earl@gmail.com",
 		FirstName: "Earl",
 		LastName:  "Sweatshirt",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountFrankOcean = entity.Account{
@@ -88,7 +82,6 @@ var (
 		Email:     "frank@gmail.com",
 		FirstName: "Frank",
 		LastName:  "Ocean",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountKendrickLamar = entity.Account{
@@ -97,7 +90,6 @@ var (
 		Email:     "k.lamar@gmail.com",
 		FirstName: "Kendrick",
 		LastName:  "Lamar",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountJayRock = entity.Account{
@@ -106,7 +98,6 @@ var (
 		Email:     "j.rock@gmail.com",
 		FirstName: "Jay",
 		LastName:  "Rock",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountSchoolBoyQ = entity.Account{
@@ -115,7 +106,6 @@ var (
 		Email:     "schoolboy.q@gmail.com",
 		FirstName: "SchoolBoy",
 		LastName:  "Q",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 
 	AccountAbSoul = entity.Account{
@@ -124,24 +114,23 @@ var (
 		Email:     "a.soulq@gmail.com",
 		FirstName: "ab",
 		LastName:  "soul",
-		Password:  "$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou",
 	}
 )
 
 func createAccountSeed(ctx context.Context, db *pgxpool.Pool) {
 	query := `
-	INSERT INTO accounts(username, email, first_name, last_name, password, totp_secret) VALUES
-	('j.doe', 'j.doe@gmail.com', 'John', 'Doe', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', 'UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE'),
-	('m.champion', 'm.champion@gmail.com', 'Matt', 'Champion', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('k.abstract', 'k.abstract@gmail.com', 'Kevin', 'Abstract', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('d.joba', 'd.joba@gmail.com', 'Dom', 'Joba', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('tyler', 'tyler@gmail.com', 'Tyler', 'The Creator', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('earl', 'earl@gmail.com', 'Earl', 'Sweatshirt', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('frank', 'frank@gmail.com', 'Frank', 'Ocean', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('k.lamar', 'k.lamar@gmail.com', 'Kendrick', 'Lamar', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('j.rock', 'j.rock@gmail.com', 'Jay', 'Rock', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('schoolboy.q', 'schoolboy.q@gmail.com', 'SchoolBoy', 'Q', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', ''),
-	('a.soul', 'a.soul@gmail.com', 'Ab', 'Soul', '$2a$14$ygA10iotMn5KQQ46qQTpIOCFIzPawSyWuQ8oeh2FEUlFrbkqOiSou', '');
+	INSERT INTO accounts(username, email, first_name, last_name, totp_secret) VALUES
+	('j.doe', 'j.doe@gmail.com', 'John', 'Doe', 'UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE'),
+	('m.champion', 'm.champion@gmail.com', 'Matt', 'Champion',  ''),
+	('k.abstract', 'k.abstract@gmail.com', 'Kevin', 'Abstract',  ''),
+	('d.joba', 'd.joba@gmail.com', 'Dom', 'Joba',  ''),
+	('tyler', 'tyler@gmail.com', 'Tyler', 'The Creator',  ''),
+	('earl', 'earl@gmail.com', 'Earl', 'Sweatshirt',  ''),
+	('frank', 'frank@gmail.com', 'Frank', 'Ocean',  ''),
+	('k.lamar', 'k.lamar@gmail.com', 'Kendrick', 'Lamar',  ''),
+	('j.rock', 'j.rock@gmail.com', 'Jay', 'Rock',  ''),
+	('schoolboy.q', 'schoolboy.q@gmail.com', 'SchoolBoy', 'Q',  ''),
+	('a.soul', 'a.soul@gmail.com', 'Ab', 'Soul',  '');
 	`
 	_, err := db.Exec(ctx, query)
 	if err != nil {
