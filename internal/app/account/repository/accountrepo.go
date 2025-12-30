@@ -28,10 +28,13 @@ func NewAccountRepository(db *pgxpool.Pool) AccountRepository {
 }
 
 func (r accountRepo) Create(ctx context.Context, account entity.Account) error {
-	query := "INSERT INTO accounts (username, email, first_name, last_name, totp_secret) VALUES ($1, $2, $3, $4, $5)"
+	query := `
+	INSERT INTO accounts (username, email, first_name, last_name, auth_verifier, salt, totp_secret)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	_, err := r.db.Exec(
-		ctx, query, account.Username, account.Email, account.FirstName, account.LastName, account.TOTPSecret,
+		ctx, query, account.Username, account.Email, account.FirstName, account.LastName, account.AuthVerifier,
+		account.Salt, account.TOTPSecret,
 	)
 
 	if err != nil {

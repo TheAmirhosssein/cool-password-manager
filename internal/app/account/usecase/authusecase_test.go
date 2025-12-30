@@ -147,9 +147,9 @@ func TestAuthUsecase_CreateTwoFactor(t *testing.T) {
 		expectTF    bool
 	}{
 		{
-			name:        "success",
-			username:    johnDoe.Username,
-			password:    seed.AccountDefaultPassword,
+			name:     "success",
+			username: johnDoe.Username,
+			// password:    seed.AccountDefaultPassword,
 			expectedErr: nil,
 			expectTF:    true,
 		},
