@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
+	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
 	"github.com/bytemare/opaque"
 )
 
@@ -24,25 +25,30 @@ func (o *OpaqueAdaptor) Init() error {
 
 	secretOprfSeed, err := o.getOprfKey()
 	if err != nil {
+		log.ErrorLogger.Error("error at getting oprf key", "error", err.Error())
 		return err
 	}
 
 	serverPrivateKey, err := o.getPrivateKey()
 	if err != nil {
+		log.ErrorLogger.Error("error at getting private key", "error", err.Error())
 		return err
 	}
 
 	serverPublicKey, err := o.getPublicKey()
 	if err != nil {
+		log.ErrorLogger.Error("error at getting public key", "error", err.Error())
 		return err
 	}
 
 	server, err := conf.Server()
 	if err != nil {
+		log.ErrorLogger.Error("error at starting opaque server", "error", err.Error())
 		return err
 	}
 
 	if err := server.SetKeyMaterial(serverID, serverPrivateKey, serverPublicKey, secretOprfSeed); err != nil {
+		log.ErrorLogger.Error("error at setting key material", "error", err.Error())
 		return err
 	}
 
@@ -53,6 +59,7 @@ func (o *OpaqueAdaptor) Init() error {
 func (o *OpaqueAdaptor) RegisterInit(message []byte) ([]byte, []byte, error) {
 	req, err := o.server.Deserialize.RegistrationRequest(message)
 	if err != nil {
+		log.ErrorLogger.Error("error at deserializing message", "error", err.Error())
 		return nil, nil, err
 	}
 
@@ -60,16 +67,19 @@ func (o *OpaqueAdaptor) RegisterInit(message []byte) ([]byte, []byte, error) {
 
 	serverPublicKey, err := o.getPublicKey()
 	if err != nil {
+		log.ErrorLogger.Error("error at getting public key", "error", err.Error())
 		return nil, nil, err
 	}
 
 	pks, err := o.server.Deserialize.DecodeAkePublicKey(serverPublicKey)
 	if err != nil {
+		log.ErrorLogger.Error("error at decoding ake public key", "error", err.Error())
 		return nil, nil, err
 	}
 
 	secretOprfKey, err := o.getOprfKey()
 	if err != nil {
+		log.ErrorLogger.Error("error at getting oprf key", "error", err.Error())
 		return nil, nil, err
 	}
 
@@ -81,6 +91,7 @@ func (o *OpaqueAdaptor) RegisterInit(message []byte) ([]byte, []byte, error) {
 func (o *OpaqueAdaptor) RegisterFinalize(message, credID []byte, username string) ([]byte, error) {
 	record, err := o.server.Deserialize.RegistrationRecord(message)
 	if err != nil {
+		log.ErrorLogger.Error("error at deserializing message", "error", err.Error())
 		return nil, err
 	}
 
