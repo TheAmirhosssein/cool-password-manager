@@ -19,10 +19,11 @@ var (
 
 type (
 	Config struct {
-		APP   `yaml:"app"`
-		HTTP  `yaml:"http"`
-		DB    `yaml:"db"`
-		Redis `yaml:"redis"`
+		APP    `yaml:"app"`
+		HTTP   `yaml:"http"`
+		DB     `yaml:"db"`
+		Redis  `yaml:"redis"`
+		Opaque `yaml:"opaque"`
 	}
 
 	APP struct {
@@ -49,6 +50,13 @@ type (
 
 	Redis struct {
 		URL string `env-required:"true" env:"REDIS_URL"`
+	}
+
+	Opaque struct {
+		ServerID       string `env-required:"true" yaml:"server_id" env:"SERVER_ID"`
+		PublicKeyPath  string `env-required:"true" yaml:"public_key_path" env:"PUBLIC_KEY_PATH"`
+		PrivateKeyPath string `env-required:"true" yaml:"private_key_path" env:"PRIVATE_KEY_PATH"`
+		OprfKeyPath    string `env-required:"true" yaml:"oprf_key_path" env:"ORFP_KEY_PATH"`
 	}
 )
 
