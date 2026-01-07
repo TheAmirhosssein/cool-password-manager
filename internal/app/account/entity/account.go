@@ -5,13 +5,11 @@ import (
 )
 
 type Account struct {
-	Entity    base.Entity
-	Username  string
-	Email     string
-	FirstName string
-	LastName  string
-	// Password     string
+	Entity       base.Entity
+	Username     string
+	Email        string
+	FirstName    string
+	LastName     string
 	TOTPSecret   []byte
-	AuthVerifier []byte
-	Salt         []byte
+	OpaqueRecord []byte
 }
