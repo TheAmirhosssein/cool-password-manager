@@ -8,17 +8,17 @@ import (
 	"github.com/bytemare/opaque"
 )
 
-type OpaqueAdaptor struct {
+type opaqueAdaptor struct {
 	server *opaque.Server
 	config *config.Config
 }
 
 func New(config *config.Config) (OpaqueService, error) {
-	a := &OpaqueAdaptor{config: config}
+	a := &opaqueAdaptor{config: config}
 	return a, a.Init()
 }
 
-func (o *OpaqueAdaptor) Init() error {
+func (o *opaqueAdaptor) Init() error {
 	serverID := []byte(o.config.Opaque.ServerID)
 
 	conf := opaque.DefaultConfiguration()
@@ -56,7 +56,7 @@ func (o *OpaqueAdaptor) Init() error {
 	return nil
 }
 
-func (o *OpaqueAdaptor) RegisterInit(message []byte) ([]byte, []byte, error) {
+func (o *opaqueAdaptor) RegisterInit(message []byte) ([]byte, []byte, error) {
 	req, err := o.server.Deserialize.RegistrationRequest(message)
 	if err != nil {
 		log.ErrorLogger.Error("error at deserializing message", "error", err.Error())
@@ -88,7 +88,7 @@ func (o *OpaqueAdaptor) RegisterInit(message []byte) ([]byte, []byte, error) {
 	return resp.Serialize(), credID, nil
 }
 
-func (o *OpaqueAdaptor) RegisterFinalize(message, credID []byte, username string) ([]byte, error) {
+func (o *opaqueAdaptor) RegisterFinalize(message, credID []byte, username string) ([]byte, error) {
 	record, err := o.server.Deserialize.RegistrationRecord(message)
 	if err != nil {
 		log.ErrorLogger.Error("error at deserializing message", "error", err.Error())
@@ -104,14 +104,14 @@ func (o *OpaqueAdaptor) RegisterFinalize(message, credID []byte, username string
 	return clientRecord.Serialize(), nil
 }
 
-func (o *OpaqueAdaptor) getPublicKey() ([]byte, error) {
+func (o *opaqueAdaptor) getPublicKey() ([]byte, error) {
 	return os.ReadFile(o.config.Opaque.PublicKeyPath)
 }
 
-func (o *OpaqueAdaptor) getPrivateKey() ([]byte, error) {
+func (o *opaqueAdaptor) getPrivateKey() ([]byte, error) {
 	return os.ReadFile(o.config.Opaque.PrivateKeyPath)
 }
 
-func (o *OpaqueAdaptor) getOprfKey() ([]byte, error) {
+func (o *opaqueAdaptor) getOprfKey() ([]byte, error) {
 	return os.ReadFile(o.config.Opaque.OprfKeyPath)
 }
