@@ -11,3 +11,8 @@ type Entity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+type CacheEntity struct {
+	ID       types.CacheID
+	Duration time.Duration
+}
