@@ -20,7 +20,7 @@ var (
 	}
 )
 
-func CreateTowFactorSeed(ctx context.Context, rdb *redis.Client) {
+func createTowFactorSeed(ctx context.Context, rdb *redis.Client) {
 	err := rdb.Set(ctx, string(TwoFactorJohnDoe.ID), TwoFactorJohnDoe.Username, TwoFactorJohnDoe.Duration).Err()
 	if err != nil {
 		panic(err)

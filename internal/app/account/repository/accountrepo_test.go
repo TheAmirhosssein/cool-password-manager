@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 		Addr: mr.Addr(),
 	})
 
-	seed.CreateTowFactorSeed(ctx, redisClient)
+	seed.CreateRedisSeed(ctx, redisClient)
 
 	exitCode := m.Run()
 	testdocker.StopAndRemoveContainer(ctx, pgTestSuite.name, pgTestSuite.name)
