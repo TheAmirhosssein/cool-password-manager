@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/TheAmirhosssein/cool-password-manage/internal/utils/oprfutils"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 )
@@ -53,10 +54,11 @@ type (
 	}
 
 	Opaque struct {
-		ServerID       string `env-required:"true" yaml:"server_id" env:"SERVER_ID"`
-		PublicKeyPath  string `env-required:"true" yaml:"public_key_path" env:"PUBLIC_KEY_PATH"`
-		PrivateKeyPath string `env-required:"true" yaml:"private_key_path" env:"PRIVATE_KEY_PATH"`
-		OprfKeyPath    string `env-required:"true" yaml:"oprf_key_path" env:"ORFP_KEY_PATH"`
+		ServerID             string `env-required:"true" yaml:"server_id" env:"SERVER_ID"`
+		PublicKeyPath        string `env-required:"true" yaml:"public_key_path" env:"PUBLIC_KEY_PATH"`
+		PrivateKeyPath       string `env-required:"true" yaml:"private_key_path" env:"PRIVATE_KEY_PATH"`
+		OprfKeyPath          string `env-required:"true" yaml:"oprf_key_path" env:"ORFP_KEY_PATH"`
+		RegistrationDuration int    `env-required:"true" yaml:"registration_duration" env:"RegistrationDuration"`
 	}
 )
 
@@ -99,7 +101,7 @@ func GetConfig() *Config {
 }
 
 func GetTestConfig() *Config {
-	return &Config{}
+	return &Config{Opaque: createTestCodes()}
 }
 
 func (c *Config) GetAESSecretKey() ([]byte, error) {
@@ -126,10 +128,30 @@ func getRootPath() (string, error) {
 		return "", err
 	}
 
-	index := strings.Index(path, `\internal`)
+	index := strings.Index(path, `/internal`)
 	if index != -1 {
 		path = path[:index]
 	}
 
 	return path, err
+}
+
+func createTestCodes() Opaque {
+	rootPath, err := getRootPath()
+	if err != nil {
+		panic(err)
+	}
+
+	keysPath := fmt.Sprint(rootPath, "/internal/infrastructure/opaque/keys/test/")
+	err = oprfutils.GenerateAndSaveKeys(keysPath)
+	if err != nil {
+		panic(err)
+	}
+
+	return Opaque{
+		ServerID:       "something",
+		PublicKeyPath:  fmt.Sprint(keysPath, "public.bin"),
+		PrivateKeyPath: fmt.Sprint(keysPath, "private.bin"),
+		OprfKeyPath:    fmt.Sprint(keysPath, "oprf.bin"),
+	}
 }

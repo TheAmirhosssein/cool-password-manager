@@ -23,4 +23,5 @@ opaque:
   public_key_path: "internal/infrastructure/opaque/keys/server_public.bin"
   private_key_path: "internal/infrastructure/opaque/keys/server_private.bin"
   oprf_key_path: "internal/infrastructure/opaque/keys/oprf_seed.bin"
+  registration_duration: 20
   

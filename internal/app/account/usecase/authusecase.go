@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/opaque"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/totp"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/encrypt"
@@ -18,43 +20,74 @@ import (
 )
 
 type AuthUsecase struct {
-	accountRepo   repository.AccountRepository
-	twoFactorRepo repository.TwoFactorRepository
+	accountRepo      repository.AccountRepository
+	twoFactorRepo    repository.TwoFactorRepository
+	registrationRepo repository.RegistrationRepository
+
 	authenticator totp.AuthenticatorAdaptor
-	config        *config.Config
+	opaqueServer  opaque.OpaqueService
+
+	config *config.Config
 }
 
 func NewAuthUsecase(aRepo repository.AccountRepository, tfRepo repository.TwoFactorRepository,
-	authenticator totp.AuthenticatorAdaptor, config *config.Config) AuthUsecase {
-	return AuthUsecase{accountRepo: aRepo, twoFactorRepo: tfRepo, authenticator: authenticator, config: config}
+	rRepo repository.RegistrationRepository, authenticator totp.AuthenticatorAdaptor,
+	opaqueServer opaque.OpaqueService, config *config.Config) AuthUsecase {
+	return AuthUsecase{
+		accountRepo:      aRepo,
+		twoFactorRepo:    tfRepo,
+		authenticator:    authenticator,
+		opaqueServer:     opaqueServer,
+		registrationRepo: rRepo,
+		config:           config,
+	}
 }
 
-func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Authenticator, error) {
-	existByUsername, err := u.accountRepo.ExistByUsername(ctx, acc.Username)
+func (u *AuthUsecase) SignUpInit(ctx context.Context, registration entity.Registration, message []byte) ([]byte, types.CacheID, error) {
+	existByUsername, err := u.accountRepo.ExistByUsername(ctx, registration.Username)
 	if err != nil {
-		log.ErrorLogger.Error("error checking user existence by username", "error", err.Error(), "username", acc.Username)
-		return totp.Authenticator{}, errors.NewServerError()
+		log.ErrorLogger.Error("error checking user existence by username", "error", err.Error(), "username", registration.Username)
+		return nil, types.CacheID(""), errors.NewServerError()
 	}
 
 	if existByUsername {
-		return totp.Authenticator{}, account.AuthUsernameExist
+		return nil, types.CacheID(""), account.AuthUsernameExist
 	}
 
-	existByEmail, err := u.accountRepo.ExistByEmail(ctx, acc.Email)
+	existByEmail, err := u.accountRepo.ExistByEmail(ctx, registration.Email)
 	if err != nil {
-		log.ErrorLogger.Error("error checking user existence by email", "error", err.Error(), "username", acc.Username)
-		return totp.Authenticator{}, errors.NewServerError()
+		log.ErrorLogger.Error("error checking user existence by email", "error", err.Error(), "username", registration.Username)
+		return nil, types.CacheID(""), errors.NewServerError()
 	}
 
 	if existByEmail {
-		return totp.Authenticator{}, account.AuthEmailExist
+		return nil, types.CacheID(""), account.AuthEmailExist
 	}
 
-	// validPassword := validation.IsValidPassword(acc.Password)
-	// if !validPassword {
-	// 	return totp.Authenticator{}, account.AuthInvalidPassword
-	// }
+	response, credID, err := u.opaqueServer.RegisterInit(message)
+	if err != nil {
+		log.ErrorLogger.Error("error at registration initiation", "error", err.Error())
+		return nil, types.CacheID(""), errors.NewServerError()
+	}
 
+	registration.CredID = credID
+	registration.Duration = time.Minute * time.Duration(u.config.TwoFactorDuration)
+	registration.ID, err = generateRegistrationID(registration.Username)
+	if err != nil {
+		log.ErrorLogger.Error("error at generation registration id", "error", err.Error())
+		return nil, types.CacheID(""), errors.NewServerError()
+	}
+
+	err = u.registrationRepo.Create(ctx, registration)
+	if err != nil {
+		log.ErrorLogger.Error("error at saving registration", "error", err.Error())
+		return nil, types.CacheID(""), errors.NewServerError()
+	}
+
+	return response, registration.ID, nil
+}
+
+func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Authenticator, error) {
 	authenticator, err := u.authenticator.GenerateQRCode(acc.Username)
 	if err != nil {
 		log.ErrorLogger.Error("error at generating authenticator qr code", "error", err.Error(), "username", acc.Username)
@@ -73,14 +106,7 @@ func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Auth
 		return totp.Authenticator{}, errors.NewServerError()
 	}
 
-	// password, err := encrypt.HashPassword(acc.Password)
-	// if err != nil {
-	// 	log.ErrorLogger.Error("error at hashing password", "error", err.Error(), "username", acc.Username)
-	// 	return totp.Authenticator{}, errors.NewServerError()
-	// }
-
 	acc.TOTPSecret = []byte(secret)
-	// acc.Password = password
 	err = u.accountRepo.Create(ctx, acc)
 	if err != nil {
 		log.ErrorLogger.Error("error at creating account", "error", err.Error(), "username", acc.Username)
@@ -100,17 +126,6 @@ func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username string) (ent
 	if !existence {
 		return entity.TwoFactor{}, account.AuthInvalidAccount
 	}
-
-	// acc, err := u.accountRepo.ReadByUsername(ctx, username)
-	// if err != nil {
-	// 	log.ErrorLogger.Error("error getting account by username", "error", err.Error(), "username", username)
-	// 	return entity.TwoFactor{}, errors.NewServerError()
-	// }
-
-	// correctPassword := encrypt.CheckPasswordHash(password, acc.Password)
-	// if !correctPassword {
-	// 	return entity.TwoFactor{}, account.AuthInvalidAccount
-	// }
 
 	twoFactorID, err := generateTwoFactorID()
 	if err != nil {
@@ -172,6 +187,16 @@ func (u *AuthUsecase) ValidateTwoFactor(ctx context.Context, twoFactorID types.C
 	}
 
 	return acc, nil
+}
+
+func generateRegistrationID(username string) (types.CacheID, error) {
+	characterLength := 16
+	bytes := make([]byte, characterLength)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return types.CacheID(fmt.Sprintf(hex.EncodeToString(bytes), username)), nil
 }
 
 func generateTwoFactorID() (string, error) {

@@ -13,12 +13,15 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/database"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/opaque"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/totp"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/seed"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/encrypt"
+	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
 	"github.com/alicebob/miniredis/v2"
+	bytemareOpaque "github.com/bytemare/opaque"
 	"github.com/jackc/pgx/v5/pgxpool"
 	googleTotp "github.com/pquerna/otp/totp"
 	"github.com/redis/go-redis/v9"
@@ -60,6 +63,93 @@ func TestMain(m *testing.M) {
 	testdocker.StopAndRemoveContainer(ctx, pgTestSuite.name, pgTestSuite.name)
 
 	os.Exit(exitCode)
+}
+
+func TestAuthUsecase_SignUpInit(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	johnDoe := seed.AccountJohnDoe
+
+	// valid opaque registration init message
+	conf := bytemareOpaque.DefaultConfiguration()
+	client, err := bytemareOpaque.NewClient(conf)
+	require.NoError(t, err)
+
+	password := []byte("strong-password")
+
+	message := client.RegistrationInit(password).Serialize()
+
+	testcases := []struct {
+		name        string
+		reg         entity.Registration
+		message     []byte
+		expectedErr error
+	}{
+		{
+			name: "success sign up init",
+			reg: entity.Registration{
+				Username: "new_user",
+				Email:    "new_user@example.com",
+			},
+			message:     message,
+			expectedErr: nil,
+		},
+		{
+			name: "username already exists",
+			reg: entity.Registration{
+				Username: johnDoe.Username,
+				Email:    "unique_email@example.com",
+			},
+			message:     message,
+			expectedErr: account.AuthUsernameExist,
+		},
+		{
+			name: "email already exists",
+			reg: entity.Registration{
+				Username: "unique_username",
+				Email:    johnDoe.Email,
+			},
+			message:     message,
+			expectedErr: account.AuthEmailExist,
+		},
+		{
+			name: "invalid opaque message",
+			reg: entity.Registration{
+				Username: "another_user",
+				Email:    "another@example.com",
+			},
+			message:     []byte("invalid-message"),
+			expectedErr: errors.NewServerError(),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			u := setupAuthUsecase()
+
+			resp, registrationID, err := u.SignUpInit(ctx, tc.reg, tc.message)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedErr.Error())
+				require.Nil(t, resp)
+			} else {
+				require.NoError(t, err)
+				require.NotEmpty(t, resp)
+
+				// verify registration saved in redis
+				registrationRepo := repository.NewRegistrationRepository(redisClient)
+				saved, err := registrationRepo.Get(ctx, registrationID)
+				require.NoError(t, err)
+				require.Equal(t, tc.reg.Username, saved.Username)
+				require.NotEmpty(t, saved.CredID)
+				require.NotZero(t, saved.Email)
+			}
+		})
+	}
 }
 
 func TestAuthUsecase_SignUp(t *testing.T) {
@@ -259,10 +349,16 @@ func TestAuthUsecase_ValidateTwoFactor(t *testing.T) {
 }
 
 func setupAuthUsecase() usecase.AuthUsecase {
-	aRepo := repository.NewAccountRepository(pgTestSuite.db)
-	tfRepo := repository.NewTwoFactorRepository(redisClient)
-	authenticator := totp.NewAuthenticatorAdaptor("something")
 	config := config.GetTestConfig()
 
-	return usecase.NewAuthUsecase(aRepo, tfRepo, authenticator, config)
+	aRepo := repository.NewAccountRepository(pgTestSuite.db)
+	tfRepo := repository.NewTwoFactorRepository(redisClient)
+	rRepo := repository.NewRegistrationRepository(redisClient)
+	authenticator := totp.NewAuthenticatorAdaptor("something")
+	opqaue, err := opaque.New(config)
+	if err != nil {
+		panic(err)
+	}
+
+	return usecase.NewAuthUsecase(aRepo, tfRepo, rRepo, authenticator, opqaue, config)
 }
