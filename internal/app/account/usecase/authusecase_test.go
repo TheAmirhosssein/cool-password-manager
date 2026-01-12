@@ -35,6 +35,7 @@ type postgresTest struct {
 
 var pgTestSuite postgresTest
 var redisClient *redis.Client
+var conf *config.Config
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -56,6 +57,8 @@ func TestMain(m *testing.M) {
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: mr.Addr(),
 	})
+
+	conf = config.GetTestConfig()
 
 	seed.CreateRedisSeed(ctx, redisClient)
 
@@ -152,73 +155,96 @@ func TestAuthUsecase_SignUpInit(t *testing.T) {
 	}
 }
 
-func TestAuthUsecase_SignUp(t *testing.T) {
+func TestAuthUsecase_SignUpFinalize(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	johnDoe := seed.AccountJohnDoe
+	u := setupAuthUsecase()
+
+	// ---------- OPAQUE client setup ----------
+	opaqueConf := bytemareOpaque.DefaultConfiguration()
+	client, err := bytemareOpaque.NewClient(opaqueConf)
+	require.NoError(t, err)
+
+	password := []byte("strong-password")
+
+	// ---------- SignUpInit phase ----------
+	initMsg := client.RegistrationInit(password).Serialize()
+
+	reg := entity.Registration{
+		Username:  "new_user",
+		Email:     "new_user@example.com",
+		FirstName: "New",
+		LastName:  "User",
+	}
+
+	resp, registrationID, err := u.SignUpInit(ctx, reg, initMsg)
+	require.NoError(t, err)
+	require.NotEmpty(t, resp)
+
+	response, err := client.Deserialize.RegistrationResponse(resp)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	record, _ := client.RegistrationFinalize(response, bytemareOpaque.ClientRegistrationFinalizeOptions{
+		ClientIdentity: []byte(reg.Username),
+		ServerIdentity: []byte(conf.Opaque.ServerID),
+	})
+	message3 := record.Serialize()
 
 	testcases := []struct {
-		name        string
-		account     entity.Account
-		expectedErr error
+		name           string
+		message        []byte
+		registrationID types.CacheID
+		expectedErr    bool
 	}{
 		{
-			name: "success signup",
-			account: entity.Account{
-				Username:  "new_user",
-				Email:     "new_user@example.com",
-				FirstName: "New",
-				LastName:  "User",
-			},
-			expectedErr: nil,
+			name:           "success signup finalize",
+			message:        message3,
+			registrationID: registrationID,
+			expectedErr:    false,
 		},
 		{
-			name: "username already exists",
-			account: entity.Account{
-				Username:  johnDoe.Username, // already seeded
-				Email:     "unique_email@example.com",
-				FirstName: "Dup",
-				LastName:  "User",
-			},
-			expectedErr: account.AuthUsernameExist,
+			name:           "registration does not exist",
+			message:        message3,
+			registrationID: "non-existent-id",
+			expectedErr:    true,
 		},
 		{
-			name: "email already exists",
-			account: entity.Account{
-				Username:  "unique_username",
-				Email:     johnDoe.Email, // already seeded
-				FirstName: "Dup",
-				LastName:  "User",
-			},
-			expectedErr: account.AuthEmailExist,
-		},
-		{
-			name: "invalid password",
-			account: entity.Account{
-				Username:  "new_user",
-				Email:     "new_user@example.com",
-				FirstName: "New",
-				LastName:  "User",
-			},
-			expectedErr: account.AuthInvalidPassword,
+			name:           "invalid opaque message",
+			message:        []byte("invalid-message"),
+			registrationID: registrationID,
+			expectedErr:    true,
 		},
 	}
 
 	for _, tc := range testcases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			u := setupAuthUsecase()
-			auth, err := u.SignUp(ctx, tc.account)
+			auth, err := u.SignUpFinalize(ctx, tc.message, tc.registrationID)
 
-			if tc.expectedErr != nil {
-				require.ErrorIs(t, err, tc.expectedErr)
+			if tc.expectedErr {
+				require.Error(t, err)
 				require.Equal(t, totp.Authenticator{}, auth)
-			} else {
-				require.NoError(t, err)
-				require.NotEmpty(t, auth.Secret)
+				return
 			}
+
+			require.NoError(t, err)
+			require.NotEmpty(t, auth.Secret)
+			require.NotEmpty(t, auth.QrCode)
+
+			// ---------- Verify account persisted ----------
+			accRepo := repository.NewAccountRepository(pgTestSuite.db)
+			acc, err := accRepo.ReadByUsername(ctx, reg.Username)
+			require.NoError(t, err)
+
+			require.Equal(t, reg.Username, acc.Username)
+			require.Equal(t, reg.Email, acc.Email)
+			require.NotEmpty(t, acc.OpaqueRecord)
+			require.NotEmpty(t, acc.TOTPSecret)
 		})
 	}
 }
@@ -349,16 +375,15 @@ func TestAuthUsecase_ValidateTwoFactor(t *testing.T) {
 }
 
 func setupAuthUsecase() usecase.AuthUsecase {
-	config := config.GetTestConfig()
 
 	aRepo := repository.NewAccountRepository(pgTestSuite.db)
 	tfRepo := repository.NewTwoFactorRepository(redisClient)
 	rRepo := repository.NewRegistrationRepository(redisClient)
 	authenticator := totp.NewAuthenticatorAdaptor("something")
-	opqaue, err := opaque.New(config)
+	opqaue, err := opaque.New(conf)
 	if err != nil {
 		panic(err)
 	}
 
-	return usecase.NewAuthUsecase(aRepo, tfRepo, rRepo, authenticator, opqaue, config)
+	return usecase.NewAuthUsecase(aRepo, tfRepo, rRepo, authenticator, opqaue, conf)
 }

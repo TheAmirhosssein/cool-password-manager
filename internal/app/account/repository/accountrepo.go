@@ -45,11 +45,11 @@ func (r accountRepo) Create(ctx context.Context, account entity.Account) error {
 }
 
 func (r accountRepo) ReadByUsername(ctx context.Context, username string) (entity.Account, error) {
-	query := "SELECT id, username, email, totp_secret FROM accounts WHERE username = $1"
+	query := "SELECT id, username, email, opaque_record, totp_secret FROM accounts WHERE username = $1"
 
 	var account entity.Account
 	err := r.db.QueryRow(ctx, query, username).Scan(
-		&account.Entity.ID, &account.Username, &account.Email, &account.TOTPSecret,
+		&account.Entity.ID, &account.Username, &account.Email, &account.OpaqueRecord, &account.TOTPSecret,
 	)
 
 	if err != nil {

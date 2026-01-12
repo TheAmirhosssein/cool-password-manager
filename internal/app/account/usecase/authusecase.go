@@ -87,7 +87,27 @@ func (u *AuthUsecase) SignUpInit(ctx context.Context, registration entity.Regist
 	return response, registration.ID, nil
 }
 
-func (u *AuthUsecase) SignUp(ctx context.Context, acc entity.Account) (totp.Authenticator, error) {
+func (u *AuthUsecase) SignUpFinalize(ctx context.Context, message []byte, registrationID types.CacheID) (totp.Authenticator, error) {
+	registration, err := u.registrationRepo.Get(ctx, registrationID)
+	if err != nil {
+		log.ErrorLogger.Error("error at getting registration", "error", err.Error())
+		return totp.Authenticator{}, errors.NewServerError()
+	}
+
+	opaqueRecord, err := u.opaqueServer.RegisterFinalize(message, registration.CredID, registration.Username)
+	if err != nil {
+		log.ErrorLogger.Error("error at finalizing registration", "error", err.Error())
+		return totp.Authenticator{}, errors.NewServerError()
+	}
+
+	acc := entity.Account{
+		Username:     registration.Username,
+		Email:        registration.Email,
+		FirstName:    registration.FirstName,
+		LastName:     registration.LastName,
+		OpaqueRecord: opaqueRecord,
+	}
+
 	authenticator, err := u.authenticator.GenerateQRCode(acc.Username)
 	if err != nil {
 		log.ErrorLogger.Error("error at generating authenticator qr code", "error", err.Error(), "username", acc.Username)
