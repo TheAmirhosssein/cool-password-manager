@@ -104,6 +104,22 @@ func (o *opaqueAdaptor) RegisterFinalize(message, credID []byte, username string
 	return clientRecord.Serialize(), nil
 }
 
+func (o *opaqueAdaptor) LoginInit(message []byte, opaqueRecord *opaque.ClientRecord) ([]byte, error) {
+	ke1, err := o.server.Deserialize.KE1(message)
+	if err != nil {
+		log.ErrorLogger.Error("error at deserializing login message", "error", err.Error())
+		return nil, err
+	}
+
+	ke2, err := o.server.LoginInit(ke1, opaqueRecord)
+	if err != nil {
+		log.ErrorLogger.Error("error at login initializing", "error", err.Error())
+		return nil, err
+	}
+
+	return ke2.Serialize(), nil
+}
+
 func (o *opaqueAdaptor) getPublicKey() ([]byte, error) {
 	return os.ReadFile(o.config.Opaque.PublicKeyPath)
 }
