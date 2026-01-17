@@ -1,6 +1,7 @@
 package opaque
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
@@ -104,14 +105,20 @@ func (o *opaqueAdaptor) RegisterFinalize(message, credID []byte, username string
 	return clientRecord.Serialize(), nil
 }
 
-func (o *opaqueAdaptor) LoginInit(message []byte, opaqueRecord *opaque.ClientRecord) ([]byte, error) {
+func (o *opaqueAdaptor) LoginInit(message, userRecord []byte) ([]byte, error) {
 	ke1, err := o.server.Deserialize.KE1(message)
 	if err != nil {
 		log.ErrorLogger.Error("error at deserializing ke1 login message", "error", err.Error())
 		return nil, err
 	}
 
-	ke2, err := o.server.LoginInit(ke1, opaqueRecord)
+	var record *opaque.ClientRecord
+	if err := json.Unmarshal(userRecord, &record); err != nil {
+		log.ErrorLogger.Error("error at deserializing user record", "error", err.Error())
+		return nil, err
+	}
+
+	ke2, err := o.server.LoginInit(ke1, record)
 	if err != nil {
 		log.ErrorLogger.Error("error at login initializing", "error", err.Error())
 		return nil, err
