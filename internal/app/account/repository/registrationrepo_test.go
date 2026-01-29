@@ -28,7 +28,6 @@ func TestRegistrationRepository_Create(t *testing.T) {
 			name: "successful",
 			registration: entity.Registration{
 				CacheEntity: base.CacheEntity{ID: "something", Duration: time.Minute},
-				CredID:      []byte("something"),
 				Username:    "something",
 				Email:       "something@gmail.com",
 				FirstName:   "something",
@@ -88,7 +87,9 @@ func TestRegistrationRepository_Get(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, registration.Username, tc.expected.Username)
-				require.Equal(t, registration.CredID, tc.expected.CredID)
+				require.Equal(t, registration.Email, tc.expected.Email)
+				require.Equal(t, registration.FirstName, tc.expected.FirstName)
+				require.Equal(t, registration.LastName, tc.expected.LastName)
 			}
 		})
 	}
