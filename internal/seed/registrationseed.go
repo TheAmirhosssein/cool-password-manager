@@ -14,11 +14,14 @@ const (
 	idJohnDoeRegistration = "john_doe_registration"
 )
 
+const (
+	DefaultPassword = "strong-password"
+)
+
 var (
 	RegistrationJohnDoe = entity.Registration{
 		CacheEntity: base.CacheEntity{ID: idJohnDoeRegistration, Duration: time.Minute},
 		Username:    AccountJohnDoe.Username,
-		CredID:      []byte("something"),
 		Email:       AccountJohnDoe.Email,
 		FirstName:   AccountJohnDoe.FirstName,
 		LastName:    AccountJohnDoe.LastName,
