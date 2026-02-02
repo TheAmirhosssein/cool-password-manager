@@ -37,11 +37,11 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 			LastName:  form.LastName,
 		}
 
-		authenticator, err := usecase.SignUp(ctx, acc)
-		if err != nil {
-			localHttp.HandleError(ctx, errors.Error2Custom(err), template, data)
-			return
-		}
+		// authenticator, err := usecase.SignUp(ctx, acc)
+		// if err != nil {
+		// 	localHttp.HandleError(ctx, errors.Error2Custom(err), template, data)
+		// 	return
+		// }
 
 		twoFactor, err := usecase.CreateTwoFactor(ctx, acc.Username)
 		if err != nil {
@@ -58,13 +58,36 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 			return
 		}
 
-		base64Img := base64.StdEncoding.EncodeToString(authenticator.QrCode)
+		base64Img := base64.StdEncoding.EncodeToString([]byte("kir"))
 
 		ctx.HTML(http.StatusOK, "qrcode.html", gin.H{
 			"QRCode":        base64Img,
 			"twoFactorPath": localHttp.PathTwoFactor,
 		})
 	}
+}
+
+func SignUpInitialHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
+	var body model.SignUpInitModel
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	registration := entity.Registration{
+		Username:  body.Username,
+		Email:     body.Email,
+		FirstName: body.FirstName,
+		LastName:  body.LastName,
+	}
+
+	record, cacheID, err := usecase.SignUpInit(ctx, registration, body.Record)
+	if err != nil {
+		localHttp.HandleJSONError(ctx, errors.Error2Custom(err))
+		return
+	}
+
+	ctx.JSON(http.StatusAccepted, gin.H{"record": record, "registrationID": cacheID})
 }
 
 func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {

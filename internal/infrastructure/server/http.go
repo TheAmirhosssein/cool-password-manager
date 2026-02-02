@@ -34,7 +34,11 @@ func Run(ctx context.Context, conf *config.Config) error {
 	server.LoadHTMLGlob(conf.APP.RootPath + conf.APP.TemplatePath)
 	server.Static(conf.APP.StaticPath, conf.APP.RootPath+conf.APP.StaticPath)
 
-	router.AccountRouter(server, conf, db, redisClient)
+	err := router.AccountRouter(server, conf, db, redisClient)
+	if err != nil {
+		return err
+	}
+
 	localHttp.ErrorServer(server)
 
 	srv := &http.Server{

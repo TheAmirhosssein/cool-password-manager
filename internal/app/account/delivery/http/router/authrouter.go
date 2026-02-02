@@ -6,22 +6,23 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/repository"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/usecase"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/http"
+	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/opaque"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/infrastructure/totp"
 	"github.com/gin-gonic/gin"
 )
 
 func authRouter(
-	server *gin.Engine, aRepo repository.AccountRepository, tfRepo repository.TwoFactorRepository, totp totp.AuthenticatorAdaptor,
-	conf *config.Config,
+	server *gin.Engine, aRepo repository.AccountRepository, tfRepo repository.TwoFactorRepository, rRepo repository.RegistrationRepository,
+	totp totp.AuthenticatorAdaptor, opaqueAdaptor opaque.OpaqueService, conf *config.Config,
 ) {
-	authUsecase := usecase.NewAuthUsecase(aRepo, tfRepo, totp, conf)
+	authUsecase := usecase.NewAuthUsecase(aRepo, tfRepo, rRepo, totp, opaqueAdaptor, conf)
 
 	server.GET(http.PathSignUp, http.GuestOnly(), func(ctx *gin.Context) {
 		handler.SignUpHandler(ctx, authUsecase)
 	})
 
-	server.POST(http.PathSignUp, http.GuestOnly(), func(ctx *gin.Context) {
-		handler.SignUpHandler(ctx, authUsecase)
+	server.POST(http.PathSignUpInit, http.GuestOnly(), func(ctx *gin.Context) {
+		handler.SignUpInitialHandler(ctx, authUsecase)
 	})
 
 	server.GET(http.PathLogin, http.GuestOnly(), func(ctx *gin.Context) {
