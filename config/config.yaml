@@ -3,7 +3,7 @@ app:
   version: "1.0.0"
   issuer: "cool-password-manager"
   template_path: "/frontend/templates/**/*.html"
-  static_path: "/web/static"
+  static_path: "/frontend/static"
   two_factor_duration: 20
   default_page: 1
   default_page_size: 10
