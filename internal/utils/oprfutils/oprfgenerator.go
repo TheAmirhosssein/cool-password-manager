@@ -1,10 +1,12 @@
 package oprfutils
 
 import (
+	"crypto"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/bytemare/ksf"
 	"github.com/bytemare/opaque"
 )
 
@@ -42,16 +44,25 @@ func GenerateAndSaveKeys(dir string) error {
 		return nil
 	}
 
-	conf := opaque.DefaultConfiguration()
+	conf := &opaque.Configuration{
+		OPRF: opaque.P256Sha256,
+		AKE:  opaque.P256Sha256,
+
+		Hash: crypto.SHA256,
+		KDF:  crypto.SHA256,
+		MAC:  crypto.SHA256,
+
+		KSF: ksf.Argon2id,
+	}
 
 	// Generate keys (RAW BYTES)
 	oprfSeed := conf.GenerateOPRFSeed()
 	privateKey, publicKey := conf.KeyGen()
 
 	data := map[string][]byte{
-		"oprf.bin":    oprfSeed,
-		"private.bin": privateKey,
-		"public.bin":  publicKey,
+		"oprf_seed.bin":      oprfSeed,
+		"server_private.bin": privateKey,
+		"server_public.bin":  publicKey,
 	}
 
 	for name, content := range data {
