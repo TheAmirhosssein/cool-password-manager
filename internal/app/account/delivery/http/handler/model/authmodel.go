@@ -8,6 +8,14 @@ type SignUpModel struct {
 	Password  string `form:"password" binding:"required"`
 }
 
+type SignUpInitModel struct {
+	Username  string `json:"username" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	FirstName string `json:"firstName" binding:"required"`
+	LastName  string `json:"lastName" binding:"required"`
+	Record    []byte `json:"registrationRequest" binding:"required"`
+}
+
 type LoginModel struct {
 	Username string `form:"username" binding:"required"`
 	Password string `form:"password" binding:"required"`
