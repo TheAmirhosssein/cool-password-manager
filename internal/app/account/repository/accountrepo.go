@@ -104,7 +104,7 @@ func (r accountRepo) ExistByUsername(ctx context.Context, username string) (bool
 }
 
 func (r accountRepo) ExistByEmail(ctx context.Context, email string) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 WHERE email = $1) FROM accounts"
+	query := "SELECT EXISTS(SELECT 1 FROM accounts WHERE email = $1) FROM accounts"
 
 	var exist bool
 	err := r.db.QueryRow(ctx, query, email).Scan(&exist)
