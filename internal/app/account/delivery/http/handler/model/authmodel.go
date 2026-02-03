@@ -9,11 +9,16 @@ type SignUpModel struct {
 }
 
 type SignUpInitModel struct {
-	Username  string `json:"username" binding:"required"`
-	Email     string `json:"email" binding:"required,email"`
-	FirstName string `json:"firstName" binding:"required"`
-	LastName  string `json:"lastName" binding:"required"`
-	Record    []byte `json:"registrationRequest" binding:"required"`
+	Username            string `json:"username" binding:"required"`
+	Email               string `json:"email" binding:"required,email"`
+	FirstName           string `json:"firstName" binding:"required"`
+	LastName            string `json:"lastName" binding:"required"`
+	RegistrationRequest []byte `json:"registrationRequest" binding:"required"`
+}
+
+type SignUpFinalizeModel struct {
+	RegistrationID     string `form:"registrationID" binding:"required"`
+	RegistrationRecord string `form:"registrationRecord" binding:"required"`
 }
 
 type LoginModel struct {

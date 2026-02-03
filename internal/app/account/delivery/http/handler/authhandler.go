@@ -19,52 +19,7 @@ func SignUpHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 	template := "sign_up.html"
 	data := gin.H{"action": localHttp.PathSignUp}
 
-	switch ctx.Request.Method {
-	case http.MethodGet:
-		ctx.HTML(http.StatusOK, template, data)
-
-	case http.MethodPost:
-		var form model.SignUpModel
-		if err := ctx.ShouldBind(&form); err != nil {
-			ctx.HTML(http.StatusOK, template, nil)
-			return
-		}
-
-		acc := entity.Account{
-			Username:  form.Username,
-			Email:     form.Email,
-			FirstName: form.FirstName,
-			LastName:  form.LastName,
-		}
-
-		// authenticator, err := usecase.SignUp(ctx, acc)
-		// if err != nil {
-		// 	localHttp.HandleError(ctx, errors.Error2Custom(err), template, data)
-		// 	return
-		// }
-
-		twoFactor, err := usecase.CreateTwoFactor(ctx, acc.Username)
-		if err != nil {
-			localHttp.HandleError(ctx, errors.Error2Custom(err), template, data)
-			return
-		}
-
-		session := sessions.Default(ctx)
-		session.Set(localHttp.AuthTwoFactorIDKey, string(twoFactor.ID))
-
-		if err := session.Save(); err != nil {
-			log.ErrorLogger.Error("can not set two factor id into session", "error", err.Error(), "username", acc.Username)
-			localHttp.NewServerError(ctx)
-			return
-		}
-
-		base64Img := base64.StdEncoding.EncodeToString([]byte("kir"))
-
-		ctx.HTML(http.StatusOK, "qrcode.html", gin.H{
-			"QRCode":        base64Img,
-			"twoFactorPath": localHttp.PathTwoFactor,
-		})
-	}
+	ctx.HTML(http.StatusOK, template, data)
 }
 
 func SignUpInitialHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
@@ -81,13 +36,55 @@ func SignUpInitialHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		LastName:  body.LastName,
 	}
 
-	record, cacheID, err := usecase.SignUpInit(ctx, registration, body.Record)
+	record, cacheID, err := usecase.SignUpInit(ctx, registration, body.RegistrationRequest)
 	if err != nil {
 		localHttp.HandleJSONError(ctx, errors.Error2Custom(err))
 		return
 	}
 
-	ctx.JSON(http.StatusAccepted, gin.H{"record": record, "registrationID": cacheID})
+	ctx.JSON(http.StatusAccepted, gin.H{"record": base64.StdEncoding.EncodeToString(record), "registrationID": cacheID})
+}
+
+func SignUpFinalizeHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
+	var body model.SignUpFinalizeModel
+	if err := ctx.ShouldBind(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	recordBytes, err := base64.StdEncoding.DecodeString(body.RegistrationRecord)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid registration record encoding"})
+		return
+	}
+
+	authenticator, username, err := usecase.SignUpFinalize(ctx, recordBytes, types.CacheID(body.RegistrationID))
+	if err != nil {
+		localHttp.HandleJSONError(ctx, errors.Error2Custom(err))
+		return
+	}
+
+	twoFactor, err := usecase.CreateTwoFactor(ctx, body.RegistrationID)
+	if err != nil {
+		localHttp.HandleJSONError(ctx, errors.Error2Custom(err))
+		return
+	}
+
+	session := sessions.Default(ctx)
+	session.Set(localHttp.AuthTwoFactorIDKey, string(twoFactor.ID))
+
+	if err := session.Save(); err != nil {
+		log.ErrorLogger.Error("can not set two factor id into session", "error", err.Error(), "username", username)
+		localHttp.NewServerError(ctx)
+		return
+	}
+
+	base64Img := base64.StdEncoding.EncodeToString([]byte(authenticator.QrCode))
+
+	ctx.HTML(http.StatusOK, "qrcode.html", gin.H{
+		"QRCode":        base64Img,
+		"twoFactorPath": localHttp.PathTwoFactor,
+	})
 }
 
 func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {

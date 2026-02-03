@@ -25,6 +25,10 @@ func authRouter(
 		handler.SignUpInitialHandler(ctx, authUsecase)
 	})
 
+	server.POST(http.PathSignUpFinal, http.GuestOnly(), func(ctx *gin.Context) {
+		handler.SignUpFinalizeHandler(ctx, authUsecase)
+	})
+
 	server.GET(http.PathLogin, http.GuestOnly(), func(ctx *gin.Context) {
 		handler.LoginHandler(ctx, authUsecase)
 	})
