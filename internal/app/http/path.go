@@ -5,11 +5,12 @@ const (
 	PathMe = "/"
 
 	// Auth
-	PathSignUp     = "/account/auth/sign-up/"
-	PathSignUpInit = "/account/auth/sign-up/init/"
-	PathLogin      = "/account/auth/login/"
-	PathTwoFactor  = "/account/auth/two-factor/"
-	PathLogout     = "/account/auth/logout/"
+	PathSignUp      = "/account/auth/sign-up/"
+	PathSignUpInit  = "/account/auth/sign-up/init/"
+	PathSignUpFinal = "/account/auth/sign-up/final/"
+	PathLogin       = "/account/auth/login/"
+	PathTwoFactor   = "/account/auth/two-factor/"
+	PathLogout      = "/account/auth/logout/"
 
 	// Group
 	PathGroupList         = "/account/groups/"
