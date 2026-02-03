@@ -1,10 +1,9 @@
-// frontend/webpack.config.js
 const path = require('path');
 
 module.exports = {
-    entry: './src/index.js',
+    entry: './src/signup.js',
     output: {
-        filename: 'bundle.js',
+        filename: 'signup.js',
         path: path.resolve(__dirname, 'static/dist'),
         clean: true,
         publicPath: '/static/dist/'
