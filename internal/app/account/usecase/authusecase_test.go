@@ -2,6 +2,7 @@ package usecase_test
 
 import (
 	"context"
+	"crypto"
 	"log"
 	"os"
 	"testing"
@@ -21,6 +22,7 @@ import (
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/errors"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/testdocker"
 	"github.com/alicebob/miniredis/v2"
+	"github.com/bytemare/ksf"
 	bytemareOpaque "github.com/bytemare/opaque"
 	"github.com/jackc/pgx/v5/pgxpool"
 	googleTotp "github.com/pquerna/otp/totp"
@@ -75,7 +77,15 @@ func TestAuthUsecase_SignUpInit(t *testing.T) {
 	johnDoe := seed.AccountJohnDoe
 
 	// valid opaque registration init message
-	conf := bytemareOpaque.DefaultConfiguration()
+	conf := &bytemareOpaque.Configuration{
+		OPRF: bytemareOpaque.P256Sha256,
+		AKE:  bytemareOpaque.P256Sha256,
+		Hash: crypto.SHA256,
+		KDF:  crypto.SHA256,
+		MAC:  crypto.SHA256,
+		KSF:  ksf.Argon2id,
+	}
+
 	client, err := bytemareOpaque.NewClient(conf)
 	require.NoError(t, err)
 
@@ -148,7 +158,6 @@ func TestAuthUsecase_SignUpInit(t *testing.T) {
 				saved, err := registrationRepo.Get(ctx, registrationID)
 				require.NoError(t, err)
 				require.Equal(t, tc.reg.Username, saved.Username)
-				require.NotEmpty(t, saved.CredID)
 				require.NotZero(t, saved.Email)
 			}
 		})
@@ -162,7 +171,14 @@ func TestAuthUsecase_SignUpFinalize(t *testing.T) {
 	u := setupAuthUsecase()
 
 	// ---------- OPAQUE client setup ----------
-	opaqueConf := bytemareOpaque.DefaultConfiguration()
+	opaqueConf := &bytemareOpaque.Configuration{
+		OPRF: bytemareOpaque.P256Sha256,
+		AKE:  bytemareOpaque.P256Sha256,
+		Hash: crypto.SHA256,
+		KDF:  crypto.SHA256,
+		MAC:  crypto.SHA256,
+		KSF:  ksf.Argon2id,
+	}
 	client, err := bytemareOpaque.NewClient(opaqueConf)
 	require.NoError(t, err)
 
@@ -224,7 +240,7 @@ func TestAuthUsecase_SignUpFinalize(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			auth, err := u.SignUpFinalize(ctx, tc.message, tc.registrationID)
+			auth, username, err := u.SignUpFinalize(ctx, tc.message, tc.registrationID)
 
 			if tc.expectedErr {
 				require.Error(t, err)
@@ -238,13 +254,83 @@ func TestAuthUsecase_SignUpFinalize(t *testing.T) {
 
 			// ---------- Verify account persisted ----------
 			accRepo := repository.NewAccountRepository(pgTestSuite.db)
-			acc, err := accRepo.ReadByUsername(ctx, reg.Username)
+			acc, err := accRepo.ReadByUsername(ctx, username)
 			require.NoError(t, err)
 
 			require.Equal(t, reg.Username, acc.Username)
 			require.Equal(t, reg.Email, acc.Email)
 			require.NotEmpty(t, acc.OpaqueRecord)
 			require.NotEmpty(t, acc.TOTPSecret)
+		})
+	}
+}
+
+func TestAuthUsecase_LoginInit(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	johnDoe := seed.AccountJohnDoe
+	password := []byte(seed.DefaultPassword)
+
+	// valid opaque registration init message
+	conf := &bytemareOpaque.Configuration{
+		OPRF: bytemareOpaque.P256Sha256,
+		AKE:  bytemareOpaque.P256Sha256,
+		Hash: crypto.SHA256,
+		KDF:  crypto.SHA256,
+		MAC:  crypto.SHA256,
+		KSF:  ksf.Argon2id,
+	}
+	client, err := bytemareOpaque.NewClient(conf)
+	require.NoError(t, err)
+
+	// The client initiates the ball and sends the serialized ke1 to the server.
+	ke1 := client.LoginInit(password)
+	message := ke1.Serialize()
+
+	testcases := []struct {
+		name        string
+		account     entity.Account
+		message     []byte
+		expectedErr error
+	}{
+		{
+			name:        "success login init",
+			account:     johnDoe,
+			message:     message,
+			expectedErr: nil,
+		},
+		{
+			name: "user does not exists",
+			account: entity.Account{
+				Username: "something-wrong",
+			},
+			message:     message,
+			expectedErr: account.AuthInvalidAccount,
+		},
+		{
+			name:        "invalid opaque message",
+			account:     johnDoe,
+			message:     []byte("invalid-message"),
+			expectedErr: errors.NewServerError(),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			u := setupAuthUsecase()
+
+			resp, err := u.LoginInit(ctx, tc.message, tc.account.Username)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedErr.Error())
+				require.Nil(t, resp)
+			} else {
+				require.NoError(t, err)
+				require.NotEmpty(t, resp)
+			}
 		})
 	}
 }

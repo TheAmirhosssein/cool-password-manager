@@ -14,10 +14,6 @@ const (
 	idJohnDoeRegistration = "john_doe_registration"
 )
 
-const (
-	DefaultPassword = "strong-password"
-)
-
 var (
 	RegistrationJohnDoe = entity.Registration{
 		CacheEntity: base.CacheEntity{ID: idJohnDoeRegistration, Duration: time.Minute},

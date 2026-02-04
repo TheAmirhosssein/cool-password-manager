@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
@@ -70,13 +70,8 @@ func (u *AuthUsecase) SignUpInit(ctx context.Context, registration entity.Regist
 		return nil, types.CacheID(""), errors.NewServerError()
 	}
 
-	registration.CredID = credID
 	registration.Duration = time.Minute * time.Duration(u.config.TwoFactorDuration)
-	registration.ID, err = generateRegistrationID(registration.Username)
-	if err != nil {
-		log.ErrorLogger.Error("error at generation registration id", "error", err.Error())
-		return nil, types.CacheID(""), errors.NewServerError()
-	}
+	registration.ID = types.CacheID(base64.RawURLEncoding.EncodeToString(credID))
 
 	err = u.registrationRepo.Create(ctx, registration)
 	if err != nil {
@@ -87,17 +82,23 @@ func (u *AuthUsecase) SignUpInit(ctx context.Context, registration entity.Regist
 	return response, registration.ID, nil
 }
 
-func (u *AuthUsecase) SignUpFinalize(ctx context.Context, message []byte, registrationID types.CacheID) (totp.Authenticator, error) {
+func (u *AuthUsecase) SignUpFinalize(ctx context.Context, message []byte, registrationID types.CacheID) (totp.Authenticator, string, error) {
 	registration, err := u.registrationRepo.Get(ctx, registrationID)
 	if err != nil {
 		log.ErrorLogger.Error("error at getting registration", "error", err.Error())
-		return totp.Authenticator{}, errors.NewServerError()
+		return totp.Authenticator{}, "", errors.NewServerError()
 	}
 
-	opaqueRecord, err := u.opaqueServer.RegisterFinalize(message, registration.CredID, registration.Username)
+	credID, err := base64.RawURLEncoding.DecodeString(string(registrationID))
+	if err != nil {
+		log.ErrorLogger.Error("error at converting registration id into byte", "error", err.Error())
+		return totp.Authenticator{}, "", errors.NewServerError()
+	}
+
+	opaqueRecord, err := u.opaqueServer.RegisterFinalize(message, credID, registration.Username)
 	if err != nil {
 		log.ErrorLogger.Error("error at finalizing registration", "error", err.Error())
-		return totp.Authenticator{}, errors.NewServerError()
+		return totp.Authenticator{}, "", errors.NewServerError()
 	}
 
 	acc := entity.Account{
@@ -111,42 +112,58 @@ func (u *AuthUsecase) SignUpFinalize(ctx context.Context, message []byte, regist
 	authenticator, err := u.authenticator.GenerateQRCode(acc.Username)
 	if err != nil {
 		log.ErrorLogger.Error("error at generating authenticator qr code", "error", err.Error(), "username", acc.Username)
-		return totp.Authenticator{}, errors.NewServerError()
+		return totp.Authenticator{}, "", errors.NewServerError()
 	}
 
 	key, err := u.config.GetAESSecretKey()
 	if err != nil {
 		log.ErrorLogger.Error("error at getting aes secret key", "error", err.Error())
-		return totp.Authenticator{}, errors.NewServerError()
+		return totp.Authenticator{}, "", errors.NewServerError()
 	}
 
 	secret, err := encrypt.EncryptAESSecret(key, authenticator.Secret)
 	if err != nil {
 		log.ErrorLogger.Error("error at encrypting authenticator secret", "error", err.Error(), "username", acc.Username)
-		return totp.Authenticator{}, errors.NewServerError()
+		return totp.Authenticator{}, "", errors.NewServerError()
 	}
 
 	acc.TOTPSecret = []byte(secret)
 	err = u.accountRepo.Create(ctx, acc)
 	if err != nil {
 		log.ErrorLogger.Error("error at creating account", "error", err.Error(), "username", acc.Username)
-		return totp.Authenticator{}, errors.NewServerError()
+		return totp.Authenticator{}, "", errors.NewServerError()
 	}
 
-	return authenticator, nil
+	return authenticator, acc.Username, nil
 }
 
-func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username string) (entity.TwoFactor, error) {
+func (u *AuthUsecase) LoginInit(ctx context.Context, message []byte, username string) ([]byte, error) {
 	existence, err := u.accountRepo.ExistByUsername(ctx, username)
 	if err != nil {
 		log.ErrorLogger.Error("error checking user existence by username", "error", err.Error(), "username", username)
-		return entity.TwoFactor{}, errors.NewServerError()
+		return nil, errors.NewServerError()
 	}
 
 	if !existence {
-		return entity.TwoFactor{}, account.AuthInvalidAccount
+		return nil, account.AuthInvalidAccount
 	}
 
+	account, err := u.accountRepo.ReadByUsername(ctx, username)
+	if err != nil {
+		log.ErrorLogger.Error("error at reading user by username")
+		return nil, errors.NewServerError()
+	}
+
+	message2, err := u.opaqueServer.LoginInit(message, account.OpaqueRecord, account.Username)
+	if err != nil {
+		log.ErrorLogger.Error("error at login initiation", "error", err.Error())
+		return nil, errors.NewServerError()
+	}
+
+	return message2, nil
+}
+
+func (u *AuthUsecase) CreateTwoFactor(ctx context.Context, username string) (entity.TwoFactor, error) {
 	twoFactorID, err := generateTwoFactorID()
 	if err != nil {
 		log.ErrorLogger.Error("error generation two factor id", "error", err.Error(), "username", username)
@@ -207,16 +224,6 @@ func (u *AuthUsecase) ValidateTwoFactor(ctx context.Context, twoFactorID types.C
 	}
 
 	return acc, nil
-}
-
-func generateRegistrationID(username string) (types.CacheID, error) {
-	characterLength := 16
-	bytes := make([]byte, characterLength)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", err
-	}
-	return types.CacheID(fmt.Sprintf(hex.EncodeToString(bytes), username)), nil
 }
 
 func generateTwoFactorID() (string, error) {

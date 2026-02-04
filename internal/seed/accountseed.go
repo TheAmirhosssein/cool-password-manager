@@ -2,6 +2,7 @@ package seed
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/TheAmirhosssein/cool-password-manage/internal/app/account/entity"
 	"github.com/TheAmirhosssein/cool-password-manage/internal/types"
@@ -22,14 +23,19 @@ const (
 	idUserColinGreenwood
 )
 
+const (
+	DefaultPassword = "strong-password"
+)
+
 var (
 	AccountJohnDoe = entity.Account{
-		Entity:     base.Entity{ID: idAccountJohnDoe},
-		Username:   "j.doe",
-		Email:      "j.doe@gmail.com",
-		FirstName:  "John",
-		LastName:   "Doe",
-		TOTPSecret: []byte("UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE"),
+		Entity:       base.Entity{ID: idAccountJohnDoe},
+		Username:     "j.doe",
+		Email:        "j.doe@gmail.com",
+		FirstName:    "John",
+		LastName:     "Doe",
+		TOTPSecret:   []byte("UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE"),
+		OpaqueRecord: []byte("AsOOBVMFNKcXOaeZUL6ty1ybQL5IArnwI9tBuQxPiWqOfevEHtH4gKXCyb/Rc6ThXatGVqvzwnMmJskmFX27S+yLTcNP/4LiCtF+9muK6sXSZ9/Xx1z8URXn9ib39EB+eUBgA+kRTVVZ4e+wl5h8poZsn+c529/gwmea1LlSZYZ7"),
 	}
 
 	AccountMattChampion = entity.Account{
@@ -114,12 +120,16 @@ var (
 )
 
 func createAccountSeed(ctx context.Context, db *pgxpool.Pool) {
+	record, err := base64.StdEncoding.DecodeString(string(AccountJohnDoe.OpaqueRecord))
+	if err != nil {
+		panic(err)
+	}
+
 	query := `
 	INSERT INTO accounts
 	(username, email, first_name, last_name, opaque_record, totp_secret)
 	VALUES
-	('j.doe', 'j.doe@gmail.com', 'John', 'Doe',
-	 'Y0zZQK3sJXG9Jx3N6ZxPp5o2v5cZl+WZJ0cJ5pM8Xg4=',
+	('j.doe', 'j.doe@gmail.com', 'John', 'Doe', $1,
 	 'UDkdflLm0Z6yaRIKJnEAb3dndEVPRsdIx3V6CmKJ49ihhoybL8m157tPyAs7l6Cm8rfyME50UHr9dxbE'),
 
 	('m.champion', 'm.champion@gmail.com', 'Matt', 'Champion',
@@ -162,7 +172,7 @@ func createAccountSeed(ctx context.Context, db *pgxpool.Pool) {
 	 'Q2mF8R9P0H5D4Y5Z5X1K2N0ZP9W1cX8J5VY1A=',
 	 '');
 	`
-	_, err := db.Exec(ctx, query)
+	_, err = db.Exec(ctx, query, record)
 	if err != nil {
 		panic(err)
 	}
