@@ -1,11 +1,12 @@
 package opaque
 
 import (
-	"encoding/json"
+	"crypto"
 	"os"
 
 	"github.com/TheAmirhosssein/cool-password-manage/config"
 	"github.com/TheAmirhosssein/cool-password-manage/pkg/log"
+	"github.com/bytemare/ksf"
 	"github.com/bytemare/opaque"
 )
 
@@ -22,7 +23,16 @@ func New(config *config.Config) (OpaqueService, error) {
 func (o *opaqueAdaptor) Init() error {
 	serverID := []byte(o.config.Opaque.ServerID)
 
-	conf := opaque.DefaultConfiguration()
+	conf := &opaque.Configuration{
+		OPRF: opaque.P256Sha256,
+		AKE:  opaque.P256Sha256,
+
+		Hash: crypto.SHA256,
+		KDF:  crypto.SHA256,
+		MAC:  crypto.SHA256,
+
+		KSF: ksf.Argon2id,
+	}
 
 	secretOprfSeed, err := o.getOprfKey()
 	if err != nil {
@@ -105,20 +115,22 @@ func (o *opaqueAdaptor) RegisterFinalize(message, credID []byte, username string
 	return clientRecord.Serialize(), nil
 }
 
-func (o *opaqueAdaptor) LoginInit(message, userRecord []byte) ([]byte, error) {
+func (o *opaqueAdaptor) LoginInit(message, userRecord []byte, username string) ([]byte, error) {
 	ke1, err := o.server.Deserialize.KE1(message)
 	if err != nil {
 		log.ErrorLogger.Error("error at deserializing ke1 login message", "error", err.Error())
 		return nil, err
 	}
 
-	var record *opaque.ClientRecord
-	if err := json.Unmarshal(userRecord, &record); err != nil {
-		log.ErrorLogger.Error("error at deserializing user record", "error", err.Error())
+	registrationRecord, err := o.server.Deserialize.RegistrationRecord(userRecord)
+	if err != nil {
+		log.ErrorLogger.Error("error at deserializing register record", "error", err.Error())
 		return nil, err
 	}
 
-	ke2, err := o.server.LoginInit(ke1, record)
+	ke2, err := o.server.LoginInit(ke1, &opaque.ClientRecord{
+		RegistrationRecord: registrationRecord, ClientIdentity: []byte(username),
+	})
 	if err != nil {
 		log.ErrorLogger.Error("error at login initializing", "error", err.Error())
 		return nil, err
