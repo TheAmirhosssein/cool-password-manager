@@ -150,8 +150,8 @@ func createTestCodes() Opaque {
 
 	return Opaque{
 		ServerID:       "something",
-		PublicKeyPath:  fmt.Sprint(keysPath, "public.bin"),
-		PrivateKeyPath: fmt.Sprint(keysPath, "private.bin"),
-		OprfKeyPath:    fmt.Sprint(keysPath, "oprf.bin"),
+		PublicKeyPath:  fmt.Sprint(keysPath, "server_public.bin"),
+		PrivateKeyPath: fmt.Sprint(keysPath, "server_private.bin"),
+		OprfKeyPath:    fmt.Sprint(keysPath, "oprf_seed.bin"),
 	}
 }
