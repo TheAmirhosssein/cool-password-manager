@@ -1,19 +1,22 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/signup.js',
+    entry: {
+        signup: './src/signup.js',
+        login: './src/login.js',
+    },
     output: {
-        filename: 'signup.js',
+        filename: '[name].js', // signup.js & login.js
         path: path.resolve(__dirname, 'static/dist'),
         clean: true,
-        publicPath: '/static/dist/'
+        publicPath: '/static/dist/',
     },
     module: {
         rules: [
             {
                 test: /\.(png|svg|jpg|jpeg|gif)$/i,
-                type: 'asset/resource'
-            }
-        ]
-    }
+                type: 'asset/resource',
+            },
+        ],
+    },
 };

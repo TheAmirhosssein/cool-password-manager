@@ -280,6 +280,16 @@ eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpa
 
 /***/ },
 
+/***/ "./src/login.js"
+/*!**********************!*\
+  !*** ./src/login.js ***!
+  \**********************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _opaque_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./opaque.js */ \"./src/opaque.js\");\n/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils.js */ \"./src/utils.js\");\n\n\n\nconst form = document.getElementById(\"loginForm\");\nconst errBox = document.getElementById(\"errorBox\");\n\nform.addEventListener(\"submit\", async (e) => {\n    e.preventDefault();\n\n    const password = form.password.value;\n    const username = form.username.value;\n\n    const opaque = new _opaque_js__WEBPACK_IMPORTED_MODULE_0__.OpaqueClientWrapper(\"cool-password-manager\");\n\n    try {\n        const ke1 = await opaque.loginInit(password);\n\n        const res1 = await fetch(\"/account/auth/login/init/\", {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\" },\n            body: JSON.stringify({\n                username,\n                ke1: (0,_utils_js__WEBPACK_IMPORTED_MODULE_1__.uint8ArrayToBase64)(ke1),\n            }),\n        });\n\n        const res1Data = await res1.json();\n        if (!res1.ok) {\n            errBox.innerHTML = res1Data.message;\n            return;\n        }\n\n    } catch (err) {\n        console.error(err);\n        errBox.innerHTML = \"Registration failed. See console for details.\";\n    }\n});\n\n//# sourceURL=webpack://frontend/./src/login.js?\n}");
+
+/***/ },
+
 /***/ "./src/opaque.js"
 /*!***********************!*\
   !*** ./src/opaque.js ***!
@@ -287,16 +297,6 @@ eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpa
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   OpaqueClientWrapper: () => (/* binding */ OpaqueClientWrapper)\n/* harmony export */ });\n/* harmony import */ var _cloudflare_opaque_ts__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @cloudflare/opaque-ts */ \"./node_modules/@cloudflare/opaque-ts/lib/src/index.js\");\n// opaqueClient.js\n\n\nconst encoder = new TextEncoder();\n\nclass OpaqueClientWrapper {\n    constructor(serverIdentity) {\n        this.cfg = (0,_cloudflare_opaque_ts__WEBPACK_IMPORTED_MODULE_0__.getOpaqueConfig)(3);\n        this.client = new _cloudflare_opaque_ts__WEBPACK_IMPORTED_MODULE_0__.OpaqueClient(this.cfg);\n        this.state = null;\n        this.serverIdentity = serverIdentity\n    }\n\n    async registerInit(password) {\n        const registrationRequest = await this.client.registerInit(password)\n        return registrationRequest.serialize()\n    }\n\n    async registerFinish(serverResponseBytes, clientIdentity) {\n        const deserRes = _cloudflare_opaque_ts__WEBPACK_IMPORTED_MODULE_0__.RegistrationResponse.deserialize(this.cfg, Array.from(serverResponseBytes))\n\n        const rec = await this.client.registerFinish(deserRes, this.serverIdentity, clientIdentity)\n\n        const { record, _ } = rec\n        return record.serialize()\n    }\n\n    async loginInit(password) {\n        const ke1 = await this.client.authInit(password)\n\n        return ke1.serialize()\n    }\n\n    async loginFinish(serverResponseBytes) {\n        const credentialResponse =\n            this.client.deserializeCredentialResponse(serverResponseBytes);\n\n        const result = await this.client.loginFinish(this.state, credentialResponse);\n\n        return {\n            sessionKey: result.sessionKey,\n            exportKey: result.exportKey,\n        };\n    }\n}\n\n\n//# sourceURL=webpack://frontend/./src/opaque.js?\n}");
-
-/***/ },
-
-/***/ "./src/signup.js"
-/*!***********************!*\
-  !*** ./src/signup.js ***!
-  \***********************/
-(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _opaque_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./opaque.js */ \"./src/opaque.js\");\n/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils.js */ \"./src/utils.js\");\n\n\n\nconst form = document.getElementById(\"signupForm\");\nconst errBox = document.getElementById(\"errorBox\");\n\nform.addEventListener(\"submit\", async (e) => {\n    e.preventDefault();\n\n    const password = form.password.value;\n    const username = form.username.value;\n    const email = form.email.value;\n    const firstName = form.firstName.value;\n    const lastName = form.lastName.value;\n\n    const opaque = new _opaque_js__WEBPACK_IMPORTED_MODULE_0__.OpaqueClientWrapper(\"cool-password-manager\");\n\n    try {\n        const registrationRequest = await opaque.registerInit(password);\n\n        const res1 = await fetch(\"/account/auth/sign-up/init/\", {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\" },\n            body: JSON.stringify({\n                username,\n                email,\n                firstName,\n                lastName,\n                registrationRequest: (0,_utils_js__WEBPACK_IMPORTED_MODULE_1__.uint8ArrayToBase64)(registrationRequest),\n            }),\n        });\n\n        const res1Data = await res1.json();\n        if (!res1.ok) {\n            errBox.innerHTML = res1Data.message;\n            return;\n        }\n\n        const record = await opaque.registerFinish((0,_utils_js__WEBPACK_IMPORTED_MODULE_1__.base64ToBytes)(res1Data.record), res1Data.registrationID);\n\n        htmx.ajax(\"POST\", \"/account/auth/sign-up/final/\", {\n            target: \"#signup-container\",\n            swap: \"outerHTML\",\n            values: {\n                registrationID: res1Data.registrationID,\n                registrationRecord: (0,_utils_js__WEBPACK_IMPORTED_MODULE_1__.uint8ArrayToBase64)(record),\n            },\n        });\n\n    } catch (err) {\n        console.error(err);\n        errBox.innerHTML = \"Registration failed. See console for details.\";\n    }\n});\n\n//# sourceURL=webpack://frontend/./src/signup.js?\n}");
 
 /***/ },
 
@@ -376,7 +376,7 @@ eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpa
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module can't be inlined because the eval devtool is used.
-/******/ 	var __webpack_exports__ = __webpack_require__("./src/signup.js");
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/login.js");
 /******/ 	
 /******/ })()
 ;

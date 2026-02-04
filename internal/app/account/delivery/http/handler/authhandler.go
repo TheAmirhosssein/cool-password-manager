@@ -89,7 +89,7 @@ func SignUpFinalizeHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 
 func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 	templateName := "login.html"
-	data := gin.H{"action": localHttp.PathLogin}
+	data := gin.H{"signUpUrl": localHttp.PathSignUp}
 
 	switch ctx.Request.Method {
 	case http.MethodGet:
@@ -121,6 +121,22 @@ func LoginHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
 		ctx.Redirect(http.StatusFound, localHttp.PathTwoFactor)
 	}
 
+}
+
+func LoginInitHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {
+	var body model.LoginInitModel
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	ke2, err := usecase.LoginInit(ctx, body.KE1, body.Username)
+	if err != nil {
+		localHttp.HandleJSONError(ctx, errors.Error2Custom(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"ke2": ke2})
 }
 
 func TwoFactorHandler(ctx *gin.Context, usecase usecase.AuthUsecase) {

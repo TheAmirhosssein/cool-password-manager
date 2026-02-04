@@ -33,8 +33,8 @@ func authRouter(
 		handler.LoginHandler(ctx, authUsecase)
 	})
 
-	server.POST(http.PathLogin, http.GuestOnly(), func(ctx *gin.Context) {
-		handler.LoginHandler(ctx, authUsecase)
+	server.POST(http.PathLoginInit, http.GuestOnly(), func(ctx *gin.Context) {
+		handler.LoginInitHandler(ctx, authUsecase)
 	})
 
 	server.GET(http.PathTwoFactor, http.GuestOnly(), func(ctx *gin.Context) {

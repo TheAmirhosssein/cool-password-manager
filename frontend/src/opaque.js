@@ -26,11 +26,9 @@ export class OpaqueClientWrapper {
     }
 
     async loginInit(password) {
-        const { credentialRequest, state } =
-            await this.client.loginInit(encoder.encode(password));
-        this.state = state;
+        const ke1 = await this.client.authInit(password)
 
-        return credentialRequest.serialize();
+        return ke1.serialize()
     }
 
     async loginFinish(serverResponseBytes) {

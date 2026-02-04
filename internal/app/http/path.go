@@ -9,6 +9,7 @@ const (
 	PathSignUpInit  = "/account/auth/sign-up/init/"
 	PathSignUpFinal = "/account/auth/sign-up/final/"
 	PathLogin       = "/account/auth/login/"
+	PathLoginInit   = "/account/auth/login/init/"
 	PathTwoFactor   = "/account/auth/two-factor/"
 	PathLogout      = "/account/auth/logout/"
 
